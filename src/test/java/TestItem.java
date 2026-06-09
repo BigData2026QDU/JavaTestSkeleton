@@ -15,7 +15,7 @@ public class TestItem {
     @Column(nullable = false)
     private String name;
 
-    @Column
+    @Column(name = "\"value\"")
     private Integer value;
 
     public TestItem() {}
