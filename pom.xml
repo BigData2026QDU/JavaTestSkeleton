@@ -28,7 +28,7 @@
 
         <!-- 覆盖率 & 质量工具版本 -->
         <jacoco.version>0.8.11</jacoco.version>
-        <pitest.version>1.14.0</pitest.version>
+        <pitest.version>1.19.1</pitest.version>
         <owasp.version>9.0.9</owasp.version>
 
         <!-- 覆盖率阈值（可通过 -D 参数覆盖） -->
@@ -237,8 +237,15 @@
                  ======================================== -->
             <plugin>
                 <groupId>org.pitest</groupId>
-                <artifactId>pitest-maven-plugin</artifactId>
+                <artifactId>pitest-maven</artifactId>
                 <version>${pitest.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-junit5-plugin</artifactId>
+                        <version>1.2.2</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
                     <targetClasses>org.example.*</targetClasses>
                     <targetTests>org.example.*,*Test,*IT</targetTests>
