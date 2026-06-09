@@ -101,6 +101,9 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
 
+      - name: Compile Project
+        run: mvn compile test-compile -B -q
+
       - name: Run Mutation Testing
         run: mvn org.pitest:pitest-maven:mutationCoverage -B
 
