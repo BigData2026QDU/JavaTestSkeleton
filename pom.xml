@@ -247,8 +247,8 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <targetClasses>org.example.*</targetClasses>
-                    <targetTests>org.example.*,*Test,*IT</targetTests>
+                    <targetClasses>org.example.Tool.*</targetClasses>
+                    <targetTests>org.example.Tool.*,*Test,*IT</targetTests>
                     <mutators>DEFAULTS</mutators>
                     <timeoutConst>10000</timeoutConst>
                     <timestampedReports>false</timestampedReports>
