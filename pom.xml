@@ -249,7 +249,7 @@
                     <additionalSources>
                         <additionalSource>projects/DatabaseConnect/src/main/java</additionalSource>
                     </additionalSources>
-                    <targetTests>*Test,*IT</targetTests>
+                    <targetTests>*Test</targetTests>
                     <mutators>DEFAULTS</mutators>
                     <timestampedReports>false</timestampedReports>
                     <outputDirectory>target/pit-reports</outputDirectory>
