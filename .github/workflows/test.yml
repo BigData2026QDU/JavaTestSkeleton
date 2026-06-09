@@ -102,7 +102,7 @@ jobs:
           restore-keys: ${{ runner.os }}-maven-
 
       - name: Run Mutation Testing
-        run: mvn org.pitest:pitest-maven-plugin:mutationCoverage -B
+        run: mvn org.pitest:pitest-maven:mutationCoverage -B
 
       - name: Upload PIT Reports
         if: always()
