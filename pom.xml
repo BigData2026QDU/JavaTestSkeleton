@@ -110,6 +110,9 @@
     </dependencies>
 
     <build>
+        <!-- 将 submodule 源码加入编译路径 -->
+        <sourceDirectory>projects/DatabaseConnect/src/main/java</sourceDirectory>
+        <testSourceDirectory>src/test/java</testSourceDirectory>
         <plugins>
             <!-- ========================================
                  编译
@@ -122,27 +125,6 @@
                     <source>17</source>
                     <target>17</target>
                 </configuration>
-            </plugin>
-
-            <!-- ========================================
-                 build-helper：将 submodule 源码加入编译路径
-                 ======================================== -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.5.0</version>
-                <executions>
-                    <execution>
-                        <id>add-project-sources</id>
-                        <phase>generate-sources</phase>
-                        <goals><goal>add-source</goal></goals>
-                        <configuration>
-                            <sources>
-                                <source>projects/DatabaseConnect/src/main/java</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
 
             <!-- ========================================
