@@ -1,0 +1,3 @@
+[submodule "projects/DatabaseConnect"]
+	path = projects/DatabaseConnect
+	url = https://github.com/BigData2026QDU/DatabaseConnectModule.git

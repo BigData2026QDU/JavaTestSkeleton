@@ -4,11 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- ========================================
-         项目坐标 —— 改这里适配你的项目
-         ======================================== -->
     <groupId>org.example</groupId>
-    <artifactId>your-project</artifactId>
+    <artifactId>java-test-skeleton</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -32,18 +29,39 @@
 
     <dependencies>
         <!-- ========================================
-             你的项目依赖放这里
+             被测项目依赖（DatabaseConnect）
              ======================================== -->
-        <!-- 示例：Hibernate ORM
+        <!-- Hibernate ORM -->
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>6.4.1.Final</version>
         </dependency>
-        -->
+
+        <!-- HikariCP 连接池 -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.1.0</version>
+        </dependency>
+
+        <!-- Apache Commons Pool2 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+            <version>2.12.0</version>
+        </dependency>
+
+        <!-- MySQL 驱动（provided，运行时由环境提供） -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.2.0</version>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- ========================================
-             测试依赖 —— 一般不需要改
+             测试依赖
              ======================================== -->
         <!-- JUnit 5 -->
         <dependency>
@@ -65,7 +83,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Mockito（mock 框架） -->
+        <!-- Mockito -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -79,7 +97,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- H2 内存数据库（集成测试用） -->
+        <!-- H2 内存数据库 -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -87,7 +105,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- AssertJ（流式断言） -->
+        <!-- AssertJ -->
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
@@ -112,7 +130,31 @@
             </plugin>
 
             <!-- ========================================
-                 测试：Surefire（单元测试） + Failsafe（集成测试）
+                 build-helper：将 submodule 源码加入编译路径
+                 ======================================== -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>add-project-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>projects/DatabaseConnect/Tool</source>
+                                <source>projects/DatabaseConnect/Service</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- ========================================
+                 测试
                  ======================================== -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

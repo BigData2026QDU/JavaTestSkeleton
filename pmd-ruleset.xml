@@ -21,6 +21,7 @@
     <rule ref="category/java/errorprone.xml/NullAssignment"/>
     <rule ref="category/java/errorprone.xml/CloseResource"/>
 
-    <!-- 排除测试代码 -->
+    <!-- 排除测试代码和 submodule 项目代码 -->
     <exclude-pattern>.*/src/test/.*</exclude-pattern>
+    <exclude-pattern>.*/projects/.*</exclude-pattern>
 </ruleset>

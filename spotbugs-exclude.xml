@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-    SpotBugs 排除规则
-    排除测试代码和已知误报
--->
 <FindBugsFilter>
     <!-- 排除测试代码 -->
     <Match>
@@ -13,6 +9,19 @@
     </Match>
     <Match>
         <Class name="~.*Test\$.*"/>
+    </Match>
+
+    <!-- 排除 submodule 项目代码（外部维护） -->
+    <Match>
+        <Class name="~org\.example\.Tool\..*"/>
+    </Match>
+    <Match>
+        <Class name="~org\.example\.Service\..*"/>
+    </Match>
+
+    <!-- 排除测试实体 -->
+    <Match>
+        <Class name="TestItem"/>
     </Match>
 
     <!-- 排除自动生成的代码 -->

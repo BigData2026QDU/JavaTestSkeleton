@@ -2,10 +2,6 @@
 <!DOCTYPE hibernate-configuration PUBLIC
         "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
-<!--
-    测试用 Hibernate 配置 —— H2 内存数据库
-    不需要外部 MySQL，测试完数据自动销毁
--->
 <hibernate-configuration>
     <session-factory>
         <!-- H2 内存数据库 -->
@@ -14,17 +10,11 @@
         <property name="hibernate.connection.username">sa</property>
         <property name="hibernate.connection.password"></property>
 
-        <!-- 方言 -->
         <property name="hibernate.dialect">org.hibernate.dialect.H2Dialect</property>
-
-        <!-- DDL：自动建表 -->
         <property name="hibernate.hbm2ddl.auto">create-drop</property>
-
-        <!-- SQL 输出（调试时开启） -->
         <property name="hibernate.show_sql">false</property>
-        <property name="hibernate.format_sql">true</property>
 
-        <!-- 在这里添加你的实体映射 -->
-        <!-- <mapping class="com.example.Entity"/> -->
+        <!-- 测试实体 -->
+        <mapping class="TestItem"/>
     </session-factory>
 </hibernate-configuration>
