@@ -246,12 +246,13 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <!-- 不限制 targetClasses，扫描所有编译的类 -->
                     <targetTests>*Test,*IT</targetTests>
                     <mutators>DEFAULTS</mutators>
                     <timestampedReports>false</timestampedReports>
                     <outputDirectory>target/pit-reports</outputDirectory>
                     <failWhenNoMutations>false</failWhenNoMutations>
+                    <includeDependencyClasses>false</includeDependencyClasses>
+                    <includeGeneratedClasses>false</includeGeneratedClasses>
                 </configuration>
                 <!-- 不绑定阶段，由 CI 单独调用 -->
             </plugin>
