@@ -1,0 +1,34 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# Build
+target/
+build/
+*.class
+*.jar
+*.war
+
+# Logs
+*.log
+hs_err_pid*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Gradle
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+
+# Claude Code
+.claude/
