@@ -247,10 +247,9 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <targetClasses>org.example.Tool.*</targetClasses>
-                    <targetTests>org.example.Tool.*,*Test,*IT</targetTests>
+                    <!-- 不限制 targetClasses，扫描所有编译的类 -->
+                    <targetTests>*Test,*IT</targetTests>
                     <mutators>DEFAULTS</mutators>
-                    <timeoutConst>10000</timeoutConst>
                     <timestampedReports>false</timestampedReports>
                     <outputDirectory>target/pit-reports</outputDirectory>
                     <failWhenNoMutations>false</failWhenNoMutations>
