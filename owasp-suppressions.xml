@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+        OWASP 依赖漏洞排除规则
+        在这里添加已知误报或已接受的风险
+
+        格式示例：
+        <suppress>
+            <notes>CVE-XXXX-XXXX 是误报，该漏洞不影响我们的使用方式</notes>
+            <packageUrl regex="true">pkg:maven/org\.example.*</packageUrl>
+            <cve>CVE-XXXX-XXXX</cve>
+        </suppress>
+    -->
+
+    <!-- 测试依赖不检查漏洞（H2、Mockito 等仅 test scope） -->
+    <suppress>
+        <notes>测试依赖不纳入生产漏洞扫描</notes>
+        <packageUrl regex="true">pkg:maven/com\.h2database.*</packageUrl>
+        <cve>CVE-2021-42290</cve>
+    </suppress>
+</suppressions>

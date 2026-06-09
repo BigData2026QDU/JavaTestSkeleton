@@ -8,7 +8,7 @@ on:
 
 jobs:
   # ========================================
-  # 单元测试
+  # 单元测试 + 覆盖率
   # ========================================
   unit-test:
     name: 单元测试
@@ -31,8 +31,16 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
 
-      - name: Run Unit Tests
+      - name: Run Unit Tests + Coverage
         run: mvn test -B
+
+      - name: Upload Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: target/site/jacoco/
+          retention-days: 7
 
   # ========================================
   # 集成测试
@@ -60,6 +68,84 @@ jobs:
 
       - name: Run Integration Tests
         run: mvn verify -B -DskipTests
+
+      - name: Upload Integration Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-reports
+          path: target/failsafe-reports/
+          retention-days: 7
+
+  # ========================================
+  # 变异测试
+  # ========================================
+  mutation-test:
+    name: 变异测试
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Run Mutation Testing
+        run: mvn org.pitest:pitest-maven-plugin:mutationCoverage -B
+
+      - name: Upload PIT Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pit-reports
+          path: target/pit-reports/
+          retention-days: 7
+
+  # ========================================
+  # 依赖漏洞扫描
+  # ========================================
+  dependency-check:
+    name: 依赖漏洞扫描
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Run OWASP Dependency Check
+        run: mvn org.owasp:dependency-check-maven:check -B
+
+      - name: Upload OWASP Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-report
+          path: target/dependency-check/
+          retention-days: 7
 
   # ========================================
   # Lint：Checkstyle
