@@ -1,6 +1,6 @@
 [submodule "projects/DatabaseConnect"]
 	path = projects/DatabaseConnect
 	url = https://github.com/BigData2026QDU/DatabaseConnectModule.git
-[submodule "projects/AGENTS"]
-	path = projects/AGENTS
-	url = https://github.com/BigData2026QDU/AGENTS
+[submodule "AGENTS"]
+	path = AGENTS
+	url = https://github.com/BigData2026QDU/AGENTS.git
