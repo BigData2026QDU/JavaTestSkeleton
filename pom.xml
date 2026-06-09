@@ -246,9 +246,9 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <sourceDirectories>
-                        <sourceDirectory>projects/DatabaseConnect/src/main/java</sourceDirectory>
-                    </sourceDirectories>
+                    <additionalSources>
+                        <additionalSource>projects/DatabaseConnect/src/main/java</additionalSource>
+                    </additionalSources>
                     <targetTests>*Test,*IT</targetTests>
                     <mutators>DEFAULTS</mutators>
                     <timestampedReports>false</timestampedReports>
