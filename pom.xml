@@ -138,8 +138,7 @@
                         <goals><goal>add-source</goal></goals>
                         <configuration>
                             <sources>
-                                <source>projects/DatabaseConnect/Tool</source>
-                                <source>projects/DatabaseConnect/Service</source>
+                                <source>projects/DatabaseConnect/src/main/java</source>
                             </sources>
                         </configuration>
                     </execution>
