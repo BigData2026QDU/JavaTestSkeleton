@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Tag;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -187,8 +188,8 @@ class IntegrationTest extends BaseTest {
     @Order(9)
     @DisplayName("临时目录 —— 文件读写")
     void tempDirectoryUsage() throws Exception {
-        java.nio.Path file = createTempFile("test.txt", "hello world");
-        assertTrue(java.nio.Files.exists(file));
-        assertEquals("hello world", java.nio.Files.readString(file));
+        Path file = createTempFile("test.txt", "hello world");
+        assertTrue(Files.exists(file));
+        assertEquals("hello world", Files.readString(file));
     }
 }
