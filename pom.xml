@@ -251,8 +251,9 @@
                     <timestampedReports>false</timestampedReports>
                     <outputDirectory>target/pit-reports</outputDirectory>
                     <failWhenNoMutations>false</failWhenNoMutations>
-                    <includeDependencyClasses>false</includeDependencyClasses>
-                    <includeGeneratedClasses>false</includeGeneratedClasses>
+                    <sourceRoots>
+                        <sourceRoot>projects/DatabaseConnect/src/main/java</sourceRoot>
+                    </sourceRoots>
                 </configuration>
                 <!-- 不绑定阶段，由 CI 单独调用 -->
             </plugin>
