@@ -1,30 +1,28 @@
 import org.example.Tool.ServicePoolManager;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.function.Executable;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.assertj.core.api.Assertions.*;
 
 /**
  * ServicePoolManager 单元测试
  * 无需数据库，纯逻辑测试
  */
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ServicePoolManagerTest {
 
-    private static ServicePoolManager pool;
+    private ServicePoolManager pool;
 
-    @BeforeAll
-    static void setUp() {
+    @BeforeEach
+    void setUp() {
         pool = ServicePoolManager.getInstance();
+        pool.shutdown();
     }
 
     @AfterAll
     static void tearDown() {
-        pool.shutdown();
+        ServicePoolManager.getInstance().shutdown();
     }
 
     // ========================================
@@ -32,7 +30,6 @@ class ServicePoolManagerTest {
     // ========================================
 
     @Test
-    @Order(1)
     @DisplayName("单例：getInstance 返回同一实例")
     void singleton() {
         ServicePoolManager a = ServicePoolManager.getInstance();
@@ -45,7 +42,6 @@ class ServicePoolManagerTest {
     // ========================================
 
     @Test
-    @Order(2)
     @DisplayName("注册服务并借出")
     void registerAndBorrow() {
         pool.registerService(StringBuilder.class, StringBuilder::new, 4);
@@ -53,12 +49,9 @@ class ServicePoolManagerTest {
         StringBuilder sb = pool.borrowService(StringBuilder.class);
         assertNotNull(sb, "借出的对象不应为 null");
         pool.returnService(StringBuilder.class, sb);
-
-        pool.invalidateService(StringBuilder.class, sb);
     }
 
     @Test
-    @Order(3)
     @DisplayName("借出的对象是独立实例")
     void borrowCreatesDistinctInstances() {
         pool.registerService(StringBuilder.class, StringBuilder::new, 4);
@@ -72,7 +65,6 @@ class ServicePoolManagerTest {
     }
 
     @Test
-    @Order(4)
     @DisplayName("借出后归还，再借出同一个对象")
     void borrowReturnReuse() {
         pool.registerService(StringBuilder.class, StringBuilder::new, 4);
@@ -93,7 +85,6 @@ class ServicePoolManagerTest {
     // ========================================
 
     @Test
-    @Order(5)
     @DisplayName("重复注册抛出 IllegalStateException")
     void duplicateRegisterThrows() {
         pool.registerService(Integer.class, () -> 42, 2);
@@ -108,7 +99,6 @@ class ServicePoolManagerTest {
     // ========================================
 
     @Test
-    @Order(6)
     @DisplayName("registerService: creator 为 null 抛 NPE")
     void registerNullCreatorThrows() {
         assertThrows(NullPointerException.class, () ->
@@ -117,7 +107,6 @@ class ServicePoolManagerTest {
     }
 
     @Test
-    @Order(7)
     @DisplayName("registerService: poolSize <= 0 抛 IAE")
     void registerInvalidPoolSizeThrows() {
         assertThrows(IllegalArgumentException.class, () ->
@@ -129,7 +118,6 @@ class ServicePoolManagerTest {
     }
 
     @Test
-    @Order(8)
     @DisplayName("borrowService: 未注册的类抛 ISE")
     void borrowUnregisteredThrows() {
         assertThrows(IllegalStateException.class, () ->
@@ -138,7 +126,6 @@ class ServicePoolManagerTest {
     }
 
     @Test
-    @Order(9)
     @DisplayName("returnService: null 抛 NPE")
     void returnNullThrows() {
         pool.registerService(String.class, String::new, 2);
@@ -152,7 +139,6 @@ class ServicePoolManagerTest {
     // ========================================
 
     @Test
-    @Order(10)
     @DisplayName("销毁时调用自定义 destroyer")
     void destroyerCallback() {
         AtomicInteger destroyCount = new AtomicInteger(0);
@@ -168,10 +154,8 @@ class ServicePoolManagerTest {
     }
 
     @Test
-    @Order(11)
     @DisplayName("AutoCloseable 对象自动关闭")
     void autoCloseableDestroy() {
-        // 创建一个 AutoCloseable 的 mock
         class CloseableThing implements AutoCloseable {
             boolean closed = false;
             @Override public void close() { closed = true; }
@@ -190,7 +174,6 @@ class ServicePoolManagerTest {
     // ========================================
 
     @Test
-    @Order(12)
     @DisplayName("isRegistered 正确判断")
     void isRegisteredCheck() {
         pool.registerService(Long.class, () -> 0L, 2);
@@ -204,7 +187,6 @@ class ServicePoolManagerTest {
     // ========================================
 
     @Test
-    @Order(13)
     @DisplayName("shutdown 后借出抛异常")
     void shutdownAndBorrowThrows() {
         pool.registerService(Character.class, () -> 'a', 2);
@@ -213,9 +195,6 @@ class ServicePoolManagerTest {
         assertThrows(IllegalStateException.class, () ->
             pool.borrowService(Character.class)
         );
-
-        // 重新初始化以便后续测试
-        pool = ServicePoolManager.getInstance();
     }
 
     // ========================================
@@ -223,7 +202,6 @@ class ServicePoolManagerTest {
     // ========================================
 
     @Test
-    @Order(14)
     @DisplayName("并发借还不丢失对象")
     void concurrentBorrowReturn() throws Exception {
         pool.registerService(StringBuilder.class, StringBuilder::new, 8);
