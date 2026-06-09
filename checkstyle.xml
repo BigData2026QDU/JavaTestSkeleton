@@ -12,55 +12,55 @@
     <property name="severity" value="warning"/>
     <property name="fileExtensions" value="java"/>
 
-    <!-- 文件级检查 -->
+    <!-- Checker 级别检查 -->
     <module name="NewlineAtEndOfFile">
         <property name="lineSeparator" value="lf"/>
     </module>
-    <module name="OuterTypeFilename"/>
-    <module name="UnusedImports"/>
-    <module name="RedundantImport"/>
-
-    <!-- 空白与格式 -->
-    <module name="EmptyBlock">
-        <property name="option" value="TEXT"/>
+    <module name="FileLength">
+        <property name="max" value="500"/>
     </module>
-    <module name="NeedBraces"/>
-    <module name="LeftCurly"/>
-    <module name="RightCurly"/>
-    <module name="WhitespaceAfter"/>
-    <module name="WhitespaceAround">
-        <property name="allowEmptyConstructors" value="true"/>
-        <property name="allowEmptyMethods" value="true"/>
-        <property name="allowEmptyTypes" value="true"/>
+    <module name="LineLength">
+        <property name="max" value="150"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a]href|href|http://|https://|ftp://"/>
     </module>
-
-    <!-- 命名规范 -->
-    <module name="TypeName"/>
-    <module name="MemberName"/>
-    <module name="ParameterName"/>
-    <module name="LocalVariableName"/>
-    <module name="PackageName">
-        <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
-    </module>
-    <module name="ConstantName"/>
-
-    <!-- 代码质量 -->
-    <module name="FinalClass"/>
-    <module name="HideUtilityClassConstructor"/>
     <module name="IllegalTokenText">
         <property name="tokens" value="STRING_LITERAL"/>
         <property name="format" value="\\s+$"/>
         <property name="message" value="行尾不应有空白字符串"/>
     </module>
 
-    <!-- 文件长度 -->
-    <module name="FileLength">
-        <property name="max" value="500"/>
-    </module>
+    <!-- TreeWalker 级别检查 -->
+    <module name="TreeWalker">
+        <!-- 导入检查 -->
+        <module name="UnusedImports"/>
+        <module name="RedundantImport"/>
 
-    <!-- 行长度（放宽到 150） -->
-    <module name="LineLength">
-        <property name="max" value="150"/>
-        <property name="ignorePattern" value="^package.*|^import.*|a]href|href|http://|https://|ftp://"/>
+        <!-- 命名规范 -->
+        <module name="TypeName"/>
+        <module name="MemberName"/>
+        <module name="ParameterName"/>
+        <module name="LocalVariableName"/>
+        <module name="PackageName">
+            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+        </module>
+        <module name="ConstantName"/>
+
+        <!-- 代码结构 -->
+        <module name="FinalClass"/>
+        <module name="HideUtilityClassConstructor"/>
+
+        <!-- 空白与格式 -->
+        <module name="NeedBraces"/>
+        <module name="LeftCurly"/>
+        <module name="RightCurly"/>
+        <module name="WhitespaceAfter"/>
+        <module name="WhitespaceAround">
+            <property name="allowEmptyConstructors" value="true"/>
+            <property name="allowEmptyMethods" value="true"/>
+            <property name="allowEmptyTypes" value="true"/>
+        </module>
+        <module name="EmptyBlock">
+            <property name="option" value="TEXT"/>
+        </module>
     </module>
 </module>

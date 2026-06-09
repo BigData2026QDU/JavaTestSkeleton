@@ -21,7 +21,6 @@
     </rule>
     <rule ref="category/java/errorprone.xml/NullAssignment"/>
     <rule ref="category/java/errorprone.xml/CloseResource"/>
-    <rule ref="category/java/errorprone.xml/UnusedAssignment"/>
     <rule ref="category/java/errorprone.xml/AvoidThrowingNullPointerException"/>
 
     <!-- 代码风格 -->
