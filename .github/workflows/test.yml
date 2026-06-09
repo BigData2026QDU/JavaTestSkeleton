@@ -32,7 +32,7 @@ jobs:
           restore-keys: ${{ runner.os }}-maven-
 
       - name: Run Unit Tests + Coverage
-        run: mvn test -B
+        run: mvn -f JavaTestSkeleton/pom.xml test -B
 
       - name: Upload Coverage Report
         if: always()
@@ -67,7 +67,7 @@ jobs:
           restore-keys: ${{ runner.os }}-maven-
 
       - name: Run Integration Tests
-        run: mvn verify -B -DskipTests
+        run: mvn -f JavaTestSkeleton/pom.xml verify -B -DskipTests
 
       - name: Upload Integration Test Reports
         if: always()
@@ -102,10 +102,10 @@ jobs:
           restore-keys: ${{ runner.os }}-maven-
 
       - name: Package Project
-        run: mvn package -DskipTests -B -q
+        run: mvn -f JavaTestSkeleton/pom.xml package -DskipTests -B -q
 
       - name: Run Mutation Testing
-        run: mvn pitest:mutationCoverage -B
+        run: mvn -f JavaTestSkeleton/pom.xml pitest:mutationCoverage -B
 
       - name: Upload PIT Reports
         if: always()
@@ -146,7 +146,7 @@ jobs:
           key: ${{ runner.os }}-owasp-nvd
 
       - name: Run OWASP Dependency Check
-        run: mvn org.owasp:dependency-check-maven:check -B
+        run: mvn -f JavaTestSkeleton/pom.xml org.owasp:dependency-check-maven:check -B
 
       - name: Upload OWASP Report
         if: always()
@@ -181,7 +181,7 @@ jobs:
           restore-keys: ${{ runner.os }}-maven-
 
       - name: Run Checkstyle
-        run: mvn checkstyle:check -B
+        run: mvn -f JavaTestSkeleton/pom.xml checkstyle:check -B
 
   # ========================================
   # Lint：PMD
@@ -208,7 +208,7 @@ jobs:
           restore-keys: ${{ runner.os }}-maven-
 
       - name: Run PMD
-        run: mvn pmd:check -B
+        run: mvn -f JavaTestSkeleton/pom.xml pmd:check -B
 
   # ========================================
   # Lint：SpotBugs
@@ -235,4 +235,4 @@ jobs:
           restore-keys: ${{ runner.os }}-maven-
 
       - name: Run SpotBugs
-        run: mvn spotbugs:check -B
+        run: mvn -f JavaTestSkeleton/pom.xml spotbugs:check -B
