@@ -78,6 +78,41 @@ jobs:
           retention-days: 7
 
   # ========================================
+  # 变异测试
+  # ========================================
+  mutation-test:
+    name: 变异测试
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Run Mutation Testing
+        run: mvn org.pitest:pitest-maven:mutationCoverage -B
+
+      - name: Upload PIT Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pit-reports
+          path: target/pit-reports/
+          retention-days: 7
+
+  # ========================================
   # 依赖漏洞扫描
   # ========================================
   dependency-check:
