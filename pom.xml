@@ -251,9 +251,7 @@
                     <timestampedReports>false</timestampedReports>
                     <outputDirectory>target/pit-reports</outputDirectory>
                     <failWhenNoMutations>false</failWhenNoMutations>
-                    <sourceRoots>
-                        <sourceRoot>projects/DatabaseConnect/src/main/java</sourceRoot>
-                    </sourceRoots>
+                    <classesDirectory>${project.build.outputDirectory}</classesDirectory>
                 </configuration>
                 <!-- 不绑定阶段，由 CI 单独调用 -->
             </plugin>
