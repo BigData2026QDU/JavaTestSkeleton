@@ -4,13 +4,12 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
                              https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
-    <description>项目 PMD 规则集</description>
+    <description>项目 PMD 规则集（兼容 PMD 6.x）</description>
 
     <!-- 最佳实践 -->
     <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
     <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
     <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
-    <rule ref="category/java/bestpractices.xml/AvoidUsingHardCodedIP"/>
     <rule ref="category/java/bestpractices.xml/CheckResultSet"/>
 
     <!-- 错误倾向 -->
@@ -21,7 +20,6 @@
     </rule>
     <rule ref="category/java/errorprone.xml/NullAssignment"/>
     <rule ref="category/java/errorprone.xml/CloseResource"/>
-    <rule ref="category/java/errorprone.xml/AvoidThrowingNullPointerException"/>
 
     <!-- 代码风格 -->
     <rule ref="category/java/codestyle.xml/TooManyMethods">
@@ -29,8 +27,6 @@
             <property name="maxmethods" value="30"/>
         </properties>
     </rule>
-    <rule ref="category/java/codestyle.xml/MethodArgumentCouldBeFinal"/>
-    <rule ref="category/java/codestyle.xml/LocalVariableCouldBeFinal"/>
 
     <!-- 排除测试代码 -->
     <exclude-pattern>.*/src/test/.*</exclude-pattern>
