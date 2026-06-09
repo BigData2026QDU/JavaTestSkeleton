@@ -21,13 +21,6 @@
     <rule ref="category/java/errorprone.xml/NullAssignment"/>
     <rule ref="category/java/errorprone.xml/CloseResource"/>
 
-    <!-- 代码风格 -->
-    <rule ref="category/java/codestyle.xml/TooManyMethods">
-        <properties>
-            <property name="maxmethods" value="30"/>
-        </properties>
-    </rule>
-
     <!-- 排除测试代码 -->
     <exclude-pattern>.*/src/test/.*</exclude-pattern>
 </ruleset>

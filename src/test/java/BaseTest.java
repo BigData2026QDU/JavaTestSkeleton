@@ -75,6 +75,7 @@ public abstract class BaseTest {
      * 创建 H2 内存数据库连接
      */
     protected Connection createTestConnection() throws SQLException {
+        // H2 driver loaded automatically
         String url = testConfig.getProperty("test.db.url", "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1");
         String user = testConfig.getProperty("test.db.username", "sa");
         String password = testConfig.getProperty("test.db.password", "");
@@ -103,12 +104,13 @@ public abstract class BaseTest {
      * 关闭数据库连接
      */
     protected void closeConnection() {
-        if (conn != null && !conn.isClosed()) {
-            try {
+        if (conn == null) return;
+        try {
+            if (!conn.isClosed()) {
                 conn.close();
-            } catch (SQLException e) {
-                logger.warning("关闭数据库连接失败: " + e.getMessage());
             }
+        } catch (SQLException e) {
+            logger.warning("关闭数据库连接失败: " + e.getMessage());
         }
     }
 
