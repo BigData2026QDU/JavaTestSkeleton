@@ -18,7 +18,7 @@
         <junit.version>5.10.2</junit.version>
         <mockito.version>5.11.0</mockito.version>
         <h2.version>2.2.224</h2.version>
-        <assertj.version>3.25.3</assertj.version>
+        <assertj.version>3.27.7</assertj.version>
 
         <!-- Lint 工具版本 -->
         <checkstyle-plugin.version>3.3.1</checkstyle-plugin.version>
