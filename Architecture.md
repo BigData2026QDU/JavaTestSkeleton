@@ -4,6 +4,8 @@
 
 JavaTestSkeleton 是一个测试项目，用于测试 Java 项目。被测项目作为 Git Submodule 加入到 `projects/` 目录，测试代码通过 `build-helper-maven-plugin` 引入被测项目源码进行测试。
 
+**包命名规范：** 被测项目统一使用 `org.bigdata` 包名。
+
 ## 架构图
 
 ```

@@ -20,10 +20,14 @@
 | 文件 | 作用 |
 |------|------|
 | `pom.xml` | 测试框架配置（依赖、插件） |
-| `src/test/java/BaseTest.java` | 测试基类。提供 H2 数据库连接、临时目录（`@TempDir`）、测试配置读取、SQL 执行辅助、超时断言辅助 |
-| `src/test/java/TestDataFactory.java` | 测试数据工厂。生成标准化测试数据，支持参数化测试 |
-| `src/test/resources/hibernate.cfg.xml` | Hibernate 测试配置。使用 H2 内存数据库，DDL 自动建表 |
-| `src/test/resources/test.properties` | 测试参数。数据库连接、超时时间、线程数、日志级别等可配置项 |
+| `test/java/HibernateUtilIT.java` | HibernateUtil 集成测试。测试 CRUD、事务、HQL 查询 |
+| `test/java/DatabaseMetaServiceIT.java` | DatabaseMetaService 集成测试。测试表名查询、列名查询、数据预览 |
+| `test/java/ServicePoolManagerTest.java` | ServicePoolManager 单元测试。测试对象池管理 |
+| `test/java/TestItem.java` | 测试实体类。用于 Hibernate 集成测试 |
+| `test/java/TestDataFactory.java` | 测试数据工厂。生成标准化测试数据 |
+| `test/java/BaseTest.java` | 测试基类（如存在）。提供 H2 数据库连接、临时目录等 |
+| `test/resources/hibernate.cfg.xml` | Hibernate 测试配置。使用 H2 内存数据库，DDL 自动建表 |
+| `test/resources/test.properties` | 测试参数。数据库连接、超时时间、线程数、日志级别等可配置项 |
 
 ## projects/ (被测项目，全部为 submodule)
 

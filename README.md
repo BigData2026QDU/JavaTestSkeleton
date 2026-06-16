@@ -87,7 +87,9 @@ git submodule add https://github.com/BigData2026QDU/YourProject.git projects/You
 
 ### 包命名规范（重要）
 
-**被测项目的 Java 代码必须遵守包命名规范，否则测试工具将无法正常工作：**
+**本项目统一使用 `org.bigdata` 包名。**
+
+被测项目的 Java 代码必须遵守包命名规范，否则测试工具将无法正常工作：
 
 1. 包名必须与目录结构完全匹配
 2. 包名只使用小写字母
@@ -95,12 +97,11 @@ git submodule add https://github.com/BigData2026QDU/YourProject.git projects/You
 
 ```java
 // ✅ 正确：被测项目代码
-projects/YourProject/src/main/java/org/example/UserService.java
-→ package org.example;
+projects/DatabaseConnect/src/main/java/org/bigdata/tool/HibernateUtil.java
+→ package org.bigdata.tool;
 
-// ✅ 正确：测试代码
-JavaTestSkeleton/src/test/java/org/example/UserServiceTest.java
-→ package org.example;
+// ✅ 正确：测试代码（无需 package 声明，或使用默认包）
+JavaTestSkeleton/test/java/HibernateUtilIT.java
 ```
 
 ### 测试类命名
