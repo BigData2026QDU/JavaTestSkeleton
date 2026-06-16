@@ -3,41 +3,23 @@
 
 version: 2
 updates:
-  # Maven 依赖更新配置（你的主项目）
-  - package-ecosystem: "maven"                # Maven 生态系统
-    directory: "/"                           # pom.xml 所在目录，根目录为 "/"
+  # Maven 依赖更新配置
+  - package-ecosystem: "maven"
+    directory: "/"
     schedule:
-      interval: "weekly"                     # 检查频率：daily, weekly, monthly
-      day: "monday"                          # 可选：指定周几（仅当 interval 为 weekly 时）
-      time: "08:00"                          # 可选：UTC 时间
-      timezone: "Asia/Shanghai"              # 可选：时区
-    # 其他常用选项（按需启用）
-    target-branch: "main"                    # 可选：指定要创建 PR 的目标分支，默认为默认分支
-    labels:                                  # 可选：为 PR 打标签
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Asia/Shanghai"
+    target-branch: "main"
+    labels:
       - "dependencies"
       - "maven"
-    assignees:                               # 可选：自动指派给某些用户
-      - "your-username"
-    reviewers:                               # 可选：指定审查者
-      - "team-name"
-    commit-message:                          # 可选：自定义 PR 提交信息前缀
+    assignees:
+      - "BigData2026QDU/bigdata2026qdu"
+    reviewers:
+      - "BigData2026QDU/bigdata2026qdu"
+    commit-message:
       prefix: "[Maven]"
       include: "scope"
-    open-pull-requests-limit: 10             # 可选：同时打开的 PR 数量上限
-    allow:                                   # 可选：只允许特定依赖更新
-      - dependency-type: "production"        # 或 "development"
-      # - dependency-name: "com.google.guava:*"  # 可指定具体依赖
-    ignore:                                  # 可选：忽略某些依赖更新
-      - dependency-name: "org.springframework:spring-core"
-        update-types: ["version-update:semver-major"]  # 忽略主版本更新
-      # - dependency-name: "*"                # 示例：忽略所有非安全更新
-      #   update-types: ["version-update:semver-patch", "version-update:semver-minor"]
-    groups:                                  # 可选：将多个依赖合并到一个 PR 中
-      "spring-boot-updates":
-        patterns:
-          - "org.springframework.boot:*"
-        update-types:
-          - "minor"
-          - "patch"
-    # 安全更新（默认开启，无需额外配置）
-    # 如需单独配置安全更新，可使用 security-updates 相关选项（不常用）
+    open-pull-requests-limit: 10
