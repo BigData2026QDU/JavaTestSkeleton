@@ -1,238 +1,198 @@
-name: CI — 测试与 Lint
+name: JavaTestSkeleton CI
 
 on:
   push:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  schedule:
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
 
 jobs:
-  # ========================================
-  # 单元测试 + 覆盖率
-  # ========================================
-  unit-test:
-    name: 单元测试
+  test-and-quality:
+    name: Test and quality checks
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           submodules: recursive
+          token: ${{ secrets.PAT_TOKEN || github.token }}
+
+      - name: Update AGENTS to latest
+        run: |
+          git -C AGENTS fetch origin master
+          git -C AGENTS checkout origin/master
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'temurin'
+          distribution: temurin
+          cache: maven
 
-      - name: Cache Maven
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
+      - name: Run Maven verification
+        run: mvn -f JavaTestSkeleton/pom.xml verify -B
 
-      - name: Run Unit Tests + Coverage
-        run: mvn -f JavaTestSkeleton/pom.xml test -B
-
-      - name: Upload Coverage Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: target/site/jacoco/
-          retention-days: 7
-
-  # ========================================
-  # 集成测试
-  # ========================================
-  integration-test:
-    name: 集成测试
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Cache Maven
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
-
-      - name: Run Integration Tests
-        run: mvn -f JavaTestSkeleton/pom.xml verify -B -DskipTests
-
-      - name: Upload Integration Test Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: integration-reports
-          path: target/failsafe-reports/
-          retention-days: 7
-
-  # ========================================
-  # 变异测试
-  # ========================================
-  mutation-test:
-    name: 变异测试
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Cache Maven
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
-
-      - name: Package Project
-        run: mvn -f JavaTestSkeleton/pom.xml package -DskipTests -B -q
-
-      - name: Run Mutation Testing
+      - name: Run mutation testing
         run: mvn -f JavaTestSkeleton/pom.xml pitest:mutationCoverage -B
 
-      - name: Upload PIT Reports
+      - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pit-reports
-          path: target/pit-reports/
+          name: test-reports
+          path: |
+            JavaTestSkeleton/target/surefire-reports/
+            JavaTestSkeleton/target/failsafe-reports/
+            JavaTestSkeleton/target/site/jacoco/
+            JavaTestSkeleton/target/pit-reports/
+            JavaTestSkeleton/target/dependency-check/
+          if-no-files-found: ignore
           retention-days: 7
 
-  # ========================================
-  # 依赖漏洞扫描
-  # ========================================
-  dependency-check:
-    name: 依赖漏洞扫描
+  notify-success:
+    name: Notify tested project on success
     runs-on: ubuntu-latest
+    needs: test-and-quality
+    if: ${{ needs.test-and-quality.result == 'success' && github.event_name != 'pull_request' }}
+    env:
+      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Create release issue
+        if: ${{ env.PAT_TOKEN != '' }}
+        uses: actions/github-script@v7
         with:
-          submodules: recursive
+          github-token: ${{ env.PAT_TOKEN }}
+          script: |
+            const owner = 'BigData2026QDU';
+            const repo = 'DatabaseConnectModule';
+            const title = '[可发布] JavaTestSkeleton 测试通过 - 可以触发构建';
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+            const existing = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              per_page: 20
+            });
+            const duplicate = existing.data.find(issue => issue.title === title);
+            const body = `## 测试报告
 
-      - name: Cache Maven
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
+            测试框架：${context.repo.owner}/${context.repo.repo}
+            测试时间：${new Date().toISOString()}
+            提交 SHA：${context.sha}
+            测试结果：通过
 
-      - name: Cache OWASP NVD
-        uses: actions/cache@v4
-        with:
-          path: ~/.owasp/dependency-check-data
-          key: ${{ runner.os }}-owasp-nvd
+            ## 验证内容
 
-      - name: Run OWASP Dependency Check
-        run: mvn -f JavaTestSkeleton/pom.xml org.owasp:dependency-check-maven:check -B
+            - Maven verify
+            - JUnit / Failsafe 测试
+            - JaCoCo 覆盖率检查
+            - Checkstyle / PMD / SpotBugs
+            - OWASP Dependency Check
+            - PIT Mutation Testing
 
-      - name: Upload OWASP Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: owasp-report
-          path: target/dependency-check/
-          retention-days: 7
+            ## 详细信息
 
-  # ========================================
-  # Lint：Checkstyle
-  # ========================================
-  checkstyle:
-    name: Checkstyle
+            - 测试运行：${runUrl}
+
+            此 Issue 用于触发被测仓库后续构建和发布流程。
+
+            ---
+            由 JavaTestSkeleton CI 自动创建`;
+
+            if (duplicate) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: duplicate.number,
+                body
+              });
+            } else {
+              await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body
+              });
+            }
+
+  notify-failure:
+    name: Report test failure
     runs-on: ubuntu-latest
+    needs: test-and-quality
+    if: ${{ needs.test-and-quality.result == 'failure' && github.event_name != 'pull_request' }}
+    env:
+      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Create failure issue
+        if: ${{ env.PAT_TOKEN != '' }}
+        uses: actions/github-script@v7
         with:
-          submodules: recursive
+          github-token: ${{ env.PAT_TOKEN }}
+          script: |
+            const owner = 'BigData2026QDU';
+            const repo = 'DatabaseConnectModule';
+            const title = '[测试报告] test-failure - JavaTestSkeleton CI 未通过';
+            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `## 问题概述
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+            问题类型：test-failure
+            严重程度：priority: high
+            发现时间：${new Date().toISOString()}
+            测试框架：${context.repo.owner}/${context.repo.repo}
+            测试运行 ID：#${context.runId}
 
-      - name: Cache Maven
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
+            ## 详细信息
 
-      - name: Run Checkstyle
-        run: mvn -f JavaTestSkeleton/pom.xml checkstyle:check -B
+            JavaTestSkeleton CI 未通过，可能影响 DatabaseConnectModule 发布。
 
-  # ========================================
-  # Lint：PMD
-  # ========================================
-  pmd:
-    name: PMD
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+            ## 复现步骤
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+            1. 克隆测试框架：\`git clone https://github.com/BigData2026QDU/JavaTestSkeleton.git\`
+            2. 初始化子模块：\`git submodule update --init --recursive\`
+            3. 使用 JDK 17 运行：\`mvn -f JavaTestSkeleton/pom.xml verify -B\`
+            4. 查看失败日志：${runUrl}
 
-      - name: Cache Maven
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
+            ## 验收标准
 
-      - name: Run PMD
-        run: mvn -f JavaTestSkeleton/pom.xml pmd:check -B
+            - 所有测试通过
+            - 覆盖率达标
+            - 代码规范检查通过
+            - 安全扫描无高危漏洞
 
-  # ========================================
-  # Lint：SpotBugs
-  # ========================================
-  spotbugs:
-    name: SpotBugs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
+            ---
+            由 JavaTestSkeleton CI 自动创建`;
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Cache Maven
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven-
-
-      - name: Run SpotBugs
-        run: mvn -f JavaTestSkeleton/pom.xml spotbugs:check -B
+            const existing = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              per_page: 20
+            });
+            const duplicate = existing.data.find(issue => issue.title === title);
+            if (duplicate) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: duplicate.number,
+                body
+              });
+            } else {
+              await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body
+              });
+            }

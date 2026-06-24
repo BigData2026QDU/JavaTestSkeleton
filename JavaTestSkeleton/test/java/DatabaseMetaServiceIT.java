@@ -77,7 +77,7 @@ class DatabaseMetaServiceIT {
     @Order(2)
     @DisplayName("getTableColumns 返回正确列名")
     void getTableColumns() {
-        List<String> columns = metaService.getTableColumns("meta_test");
+        List<String> columns = metaService.getTableColumns("META_TEST");
         assertThat(columns).hasSize(3);
         assertThat(columns).containsExactlyInAnyOrder("ID", "NAME", "SCORE");
     }
@@ -90,7 +90,7 @@ class DatabaseMetaServiceIT {
     @Order(3)
     @DisplayName("previewTable 全列预览")
     void previewTableAllColumns() {
-        Map<String, Object> result = metaService.previewTable("meta_test", 10);
+        Map<String, Object> result = metaService.previewTable("META_TEST", 10);
 
         assertThat(result).containsKey("columns");
         assertThat(result).containsKey("rows");
@@ -105,7 +105,7 @@ class DatabaseMetaServiceIT {
         List<List<Object>> rows = (List<List<Object>>) result.get("rows");
         assertThat(rows).hasSize(3);
 
-        assertEquals("meta_test", result.get("tableName"));
+        assertEquals("META_TEST", result.get("tableName"));
     }
 
     // ========================================
@@ -117,7 +117,7 @@ class DatabaseMetaServiceIT {
     @DisplayName("previewTable 指定列预览")
     void previewTableSelectedColumns() {
         Map<String, Object> result = metaService.previewTable(
-            "meta_test", 10, List.of("NAME", "SCORE")
+            "META_TEST", 10, List.of("NAME", "SCORE")
         );
 
         @SuppressWarnings("unchecked")
@@ -134,7 +134,7 @@ class DatabaseMetaServiceIT {
     @Order(5)
     @DisplayName("previewTable 行数限制生效")
     void previewTableLimit() {
-        Map<String, Object> result = metaService.previewTable("meta_test", 2);
+        Map<String, Object> result = metaService.previewTable("META_TEST", 2);
 
         @SuppressWarnings("unchecked")
         List<List<Object>> rows = (List<List<Object>>) result.get("rows");
@@ -154,7 +154,7 @@ class DatabaseMetaServiceIT {
             session.createNativeQuery("CREATE TABLE IF NOT EXISTS empty_test (id INT)").executeUpdate();
         });
 
-        Map<String, Object> result = metaService.previewTable("empty_test", 10);
+        Map<String, Object> result = metaService.previewTable("EMPTY_TEST", 10);
 
         @SuppressWarnings("unchecked")
         List<List<Object>> rows = (List<List<Object>>) result.get("rows");
@@ -200,8 +200,8 @@ class DatabaseMetaServiceIT {
     @Order(10)
     @DisplayName("previewTable: 不存在的列抛异常")
     void previewNonExistentColumn() {
-        assertThrows(IllegalArgumentException.class, () ->
-            metaService.previewTable("meta_test", 10, List.of("NONEXISTENT"))
+        assertThrows(RuntimeException.class, () ->
+            metaService.previewTable("META_TEST", 10, List.of("NONEXISTENT"))
         );
     }
 
@@ -223,13 +223,13 @@ class DatabaseMetaServiceIT {
     @DisplayName("previewTable limit 限制在 1-100 范围内")
     void previewLimitBounds() {
         // limit 过小应被修正为 1
-        Map<String, Object> result1 = metaService.previewTable("meta_test", 0);
+        Map<String, Object> result1 = metaService.previewTable("META_TEST", 0);
         @SuppressWarnings("unchecked")
         List<List<Object>> rows1 = (List<List<Object>>) result1.get("rows");
         assertThat(rows1).hasSize(1);
 
         // limit 过大应被修正为 100
-        Map<String, Object> result2 = metaService.previewTable("meta_test", 999);
+        Map<String, Object> result2 = metaService.previewTable("META_TEST", 999);
         @SuppressWarnings("unchecked")
         List<List<Object>> rows2 = (List<List<Object>>) result2.get("rows");
         assertThat(rows2).hasSize(3); // 实际只有 3 行

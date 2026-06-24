@@ -32,8 +32,8 @@
         <owasp.version>9.0.9</owasp.version>
 
         <!-- 覆盖率阈值（可通过 -D 参数覆盖） -->
-        <jacoco.line.minimum>70</jacoco.line.minimum>
-        <jacoco.branch.minimum>60</jacoco.branch.minimum>
+        <jacoco.line.minimum>0.70</jacoco.line.minimum>
+        <jacoco.branch.minimum>0.60</jacoco.branch.minimum>
     </properties>
 
     <dependencies>
@@ -110,6 +110,13 @@
     </dependencies>
 
     <build>
+        <testSourceDirectory>test/java</testSourceDirectory>
+        <testResources>
+            <testResource>
+                <directory>test/resources</directory>
+            </testResource>
+        </testResources>
+
         <plugins>
             <!-- ========================================
                  编译
@@ -217,8 +224,8 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
-                    <parallel>classes</parallel>
-                    <threadCount>4</threadCount>
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
                     <trimStackTrace>false</trimStackTrace>
                 </configuration>
                 <executions>

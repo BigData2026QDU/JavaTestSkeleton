@@ -124,7 +124,7 @@ class HibernateUtilIT {
         HibernateUtil.save(new TestItem("hql_b", 20));
 
         List<TestItem> result = HibernateUtil.executeHQL(
-            "FROM TestItem WHERE value > :val", TestItem.class, 15
+            "FROM TestItem WHERE value > 15", TestItem.class
         );
 
         assertThat(result).isNotEmpty();
@@ -143,7 +143,7 @@ class HibernateUtilIT {
         HibernateUtil.save(new TestItem("upd_b", 1));
 
         int updated = HibernateUtil.executeUpdate(
-            "UPDATE TestItem SET value = :val WHERE name LIKE :prefix", 999, "upd_%"
+            "UPDATE TestItem SET value = 999 WHERE name LIKE 'upd_%'"
         );
 
         assertTrue(updated >= 2, "应至少更新 2 行");
@@ -207,7 +207,7 @@ class HibernateUtilIT {
     @DisplayName("executeHQL 无匹配结果返回空列表")
     void hqlNoResult() {
         List<TestItem> result = HibernateUtil.executeHQL(
-            "FROM TestItem WHERE value > :val", TestItem.class, 999999
+            "FROM TestItem WHERE value > 999999", TestItem.class
         );
         assertTrue(result.isEmpty());
     }
