@@ -56,6 +56,27 @@
             <version>2.12.0</version>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.15.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.15.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-hibernate6</artifactId>
+            <version>2.15.2</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>8.2.0</version>
@@ -144,10 +165,10 @@
                         <phase>generate-sources</phase>
                         <goals><goal>add-source</goal></goals>
                         <configuration>
-                        <sources>
-                            <source>../projects/DatabaseConnect/src/main/java</source>
-                            <source>../projects/JsonUtilModule/JsonUtilModule/src/main/java</source>
-                        </sources>
+                            <sources>
+                                <source>../projects/DatabaseConnect/src/main/java</source>
+                                <source>../projects/JsonUtilModule/JsonUtilModule/src/main/java</source>
+                            </sources>
                         </configuration>
                     </execution>
                 </executions>

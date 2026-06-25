@@ -1,87 +1,86 @@
+import org.example.Tool.JsonUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.time.LocalDate;
+import javax.servlet.http.HttpServletResponse;
 
-@DisplayName("JsonUtil 工具类测试")
-public class JsonUtilTest {
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+class JsonUtilTest {
+
+    static class SampleItem {
+        public String name;
+        public int count;
+        public LocalDate createdOn;
+
+        SampleItem() {
+        }
+
+        SampleItem(String name, int count, LocalDate createdOn) {
+            this.name = name;
+            this.count = count;
+            this.createdOn = createdOn;
+        }
+    }
 
     @Test
-    @DisplayName("对象序列化为 JSON 字符串")
-    void testToJson() {
-        TestItem item = new TestItem();
-        item.setId(1);
-        item.setName("测试项目");
-        item.setActive(true);
+    @DisplayName("toJson serializes object fields")
+    void toJson_withPojo_shouldSerializeFields() {
+        SampleItem item = new SampleItem("alpha", 3, LocalDate.of(2026, 6, 25));
 
         String json = JsonUtil.toJson(item);
 
-        assertNotNull(json);
-        assertTrue(json.contains("\"id\":1"));
-        assertTrue(json.contains("\"name\":\"测试项目\""));
-        assertTrue(json.contains("\"active\":true"));
+        assertThat(json).contains("\"name\":\"alpha\"");
+        assertThat(json).contains("\"count\":3");
+        assertThat(json).contains("\"createdOn\":\"2026-06-25\"");
     }
 
     @Test
-    @DisplayName("JSON 字符串反序列化为对象")
-    void testFromJson() {
-        String json = "{\"id\":1,\"name\":\"测试项目\",\"active\":true}";
+    @DisplayName("fromJson deserializes object fields")
+    void fromJson_withValidJson_shouldDeserializeFields() {
+        String json = "{\"name\":\"beta\",\"count\":5,\"createdOn\":\"2026-06-25\"}";
 
-        TestItem item = JsonUtil.fromJson(json, TestItem.class);
+        SampleItem item = JsonUtil.fromJson(json, SampleItem.class);
 
-        assertNotNull(item);
-        assertEquals(1, item.getId());
-        assertEquals("测试项目", item.getName());
-        assertTrue(item.isActive());
+        assertThat(item.name).isEqualTo("beta");
+        assertThat(item.count).isEqualTo(5);
+        assertThat(item.createdOn).isEqualTo(LocalDate.of(2026, 6, 25));
     }
 
     @Test
-    @DisplayName("null 值不序列化")
-    void testNullValuesNotSerialized() {
-        TestItem item = new TestItem();
-        item.setId(1);
-        // name 和 active 为 null
+    @DisplayName("fromJson wraps malformed JSON errors")
+    void fromJson_withInvalidJson_shouldThrowRuntimeException() {
+        RuntimeException exception = assertThrows(
+            RuntimeException.class,
+            () -> JsonUtil.fromJson("{bad-json", SampleItem.class)
+        );
 
-        String json = JsonUtil.toJson(item);
-
-        assertNotNull(json);
-        assertTrue(json.contains("\"id\":1"));
-        assertFalse(json.contains("\"name\""));
-        assertFalse(json.contains("\"active\""));
+        assertThat(exception).hasMessageContaining("JSON");
+        assertThat(exception).hasCauseInstanceOf(IOException.class);
     }
 
     @Test
-    @DisplayName("日期时间格式化")
-    void testDateTimeFormat() {
-        String json = "{\"timestamp\":\"2026-06-25 10:30:00\"}";
+    @DisplayName("writeJsonResponse writes JSON content")
+    void writeJsonResponse_withObject_shouldSetContentTypeAndWriteBody() throws Exception {
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        StringWriter body = new StringWriter();
+        PrintWriter writer = new PrintWriter(body);
+        when(response.getWriter()).thenReturn(writer);
+        SampleItem item = new SampleItem("gamma", 7, LocalDate.of(2026, 6, 25));
 
-        TestItem item = JsonUtil.fromJson(json, TestItem.class);
+        JsonUtil.writeJsonResponse(response, item);
+        writer.flush();
 
-        assertNotNull(item);
-    }
-
-    @Test
-    @DisplayName("JSON 反序列化失败抛出异常")
-    void testFromJsonInvalidJson() {
-        String invalidJson = "not a json";
-
-        assertThrows(RuntimeException.class, () -> {
-            JsonUtil.fromJson(invalidJson, TestItem.class);
-        });
-    }
-
-    @Test
-    @DisplayName("空对象序列化")
-    void testEmptyObjectToJson() {
-        TestItem item = new TestItem();
-
-        String json = JsonUtil.toJson(item);
-
-        assertNotNull(json);
-        assertEquals("{}", json);
+        verify(response).setContentType("application/json;charset=UTF-8");
+        assertThat(body.toString()).contains("\"name\":\"gamma\"");
+        assertThat(body.toString()).contains("\"count\":7");
     }
 }
