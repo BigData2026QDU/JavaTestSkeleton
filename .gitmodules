@@ -4,3 +4,6 @@
 [submodule "AGENTS"]
 	path = AGENTS
 	url = https://github.com/BigData2026QDU/AGENTS.git
+[submodule "projects/JsonUtilModule"]
+	path = projects/JsonUtilModule
+	url = https://github.com/BigData2026QDU/JsonUtilModule.git

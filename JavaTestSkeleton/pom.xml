@@ -144,9 +144,10 @@
                         <phase>generate-sources</phase>
                         <goals><goal>add-source</goal></goals>
                         <configuration>
-                            <sources>
-                                <source>../projects/DatabaseConnect/src/main/java</source>
-                            </sources>
+                        <sources>
+                            <source>../projects/DatabaseConnect/src/main/java</source>
+                            <source>../projects/JsonUtilModule/JsonUtilModule/src/main/java</source>
+                        </sources>
                         </configuration>
                     </execution>
                 </executions>
@@ -255,6 +256,7 @@
                 <configuration>
                     <additionalSources>
                         <additionalSource>../projects/DatabaseConnect/src/main/java</additionalSource>
+                        <additionalSource>../projects/JsonUtilModule/JsonUtilModule/src/main/java</additionalSource>
                     </additionalSources>
                     <targetTests>*Test</targetTests>
                     <mutators>DEFAULTS</mutators>
