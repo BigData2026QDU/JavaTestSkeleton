@@ -4,22 +4,24 @@
 
 | 文件 | 作用 |
 |------|------|
-| `pom.xml` | 主配置。引入被测项目源码，配置 JUnit 5、Mockito、H2、AssertJ、JaCoCo、PIT、Checkstyle/PMD/SpotBugs/OWASP |
-| `checkstyle.xml` | Checkstyle 规则集。基于 Google Java Style，包含命名规范、格式、文件长度等检查 |
-| `spotbugs-exclude.xml` | SpotBugs 排除规则。排除测试代码和自动生成代码 |
-| `pmd-ruleset.xml` | PMD 规则集。检查未使用变量、空 catch、冗余代码等，排除测试代码 |
-| `owasp-suppressions.xml` | OWASP 依赖漏洞抑制规则 |
 | `README.md` | 项目简介及使用说明 |
 | `Architecture.md` | 架构说明文档 |
 | `File_Index.md` | 文件索引（本文件） |
 | `.gitignore` | Git 忽略规则 |
 | `.gitmodules` | Git Submodule 配置 |
+| `AGENTS/` | 项目规范 submodule，当前标准提交为 `0015b4df10d384830437af2da1505d5d44669fd4` |
+| `.github/workflows/test.yml` | 测试、质量检查、成功发布 issue 通知、失败测试报告 issue 创建/更新 |
+| `.github/dependabot.yml` | Maven 依赖更新配置，目录指向 `/JavaTestSkeleton` |
 
 ## JavaTestSkeleton/
 
 | 文件 | 作用 |
 |------|------|
 | `pom.xml` | 测试框架配置（依赖、插件） |
+| `checkstyle.xml` | Checkstyle 规则集。基于 Google Java Style，包含命名规范、格式、文件长度等检查 |
+| `spotbugs-exclude.xml` | SpotBugs 排除规则。排除测试代码和自动生成代码 |
+| `pmd-ruleset.xml` | PMD 规则集。检查未使用变量、空 catch、冗余代码等，排除测试代码 |
+| `owasp-suppressions.xml` | OWASP 依赖漏洞抑制规则 |
 | `test/java/HibernateUtilIT.java` | HibernateUtil 集成测试。测试 CRUD、事务、HQL 查询 |
 | `test/java/DatabaseMetaServiceIT.java` | DatabaseMetaService 集成测试。测试表名查询、列名查询、数据预览 |
 | `test/java/ServicePoolManagerTest.java` | ServicePoolManager 单元测试。测试对象池管理 |

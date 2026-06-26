@@ -137,3 +137,11 @@ JavaTestSkeleton/test/java/HibernateUtilIT.java
 5. Checkstyle
 6. PMD
 7. SpotBugs
+
+## 标准符合性
+
+- `AGENTS` 作为 submodule 固定到标准提交 `0015b4df10d384830437af2da1505d5d44669fd4`。
+- 被测项目统一放在 `projects/` 目录，并通过 `.gitmodules` 作为 submodule 管理。
+- CI 使用 JDK 17，执行 `mvn -f JavaTestSkeleton/pom.xml verify -B` 和 `mvn -f JavaTestSkeleton/pom.xml pitest:mutationCoverage -B`。
+- 测试通过后，CI 会在被测仓库创建 `[可发布]` issue 触发后续构建发布流程。
+- 测试失败后，CI 会在 JavaTestSkeleton 仓库创建或更新 `[测试报告]` issue，并包含标签、指派、复现步骤、运行链接和验收标准。
