@@ -24,7 +24,7 @@
         <checkstyle-plugin.version>3.3.1</checkstyle-plugin.version>
         <checkstyle-engine.version>10.14.2</checkstyle-engine.version>
         <spotbugs.version>4.8.3.1</spotbugs.version>
-        <pmd.version>3.21.2</pmd.version>
+        <pmd.version>3.28.0</pmd.version>
 
         <!-- 覆盖率 & 质量工具版本 -->
         <jacoco.version>0.8.11</jacoco.version>
