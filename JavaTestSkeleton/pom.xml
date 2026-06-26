@@ -22,7 +22,7 @@
 
         <!-- Lint 工具版本 -->
         <checkstyle-plugin.version>3.3.1</checkstyle-plugin.version>
-        <checkstyle-engine.version>10.14.2</checkstyle-engine.version>
+        <checkstyle-engine.version>13.6.0</checkstyle-engine.version>
         <spotbugs.version>4.8.3.1</spotbugs.version>
         <pmd.version>3.21.2</pmd.version>
 
