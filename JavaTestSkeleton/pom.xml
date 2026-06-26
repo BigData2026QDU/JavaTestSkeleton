@@ -168,6 +168,7 @@
                             <sources>
                                 <source>../projects/DatabaseConnect/src/main/java</source>
                                 <source>../projects/JsonUtilModule/JsonUtilModule/src/main/java</source>
+                                <source>../projects/ObjectPoolModule/service-pool/src/main/java</source>
                             </sources>
                         </configuration>
                     </execution>
@@ -278,6 +279,7 @@
                     <additionalSources>
                         <additionalSource>../projects/DatabaseConnect/src/main/java</additionalSource>
                         <additionalSource>../projects/JsonUtilModule/JsonUtilModule/src/main/java</additionalSource>
+                        <additionalSource>../projects/ObjectPoolModule/service-pool/src/main/java</additionalSource>
                     </additionalSources>
                     <targetTests>*Test</targetTests>
                     <mutators>DEFAULTS</mutators>

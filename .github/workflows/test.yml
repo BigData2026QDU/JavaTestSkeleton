@@ -17,7 +17,8 @@ env:
   TESTED_PROJECTS: >-
     [
       {"name":"DatabaseConnect","repo":"DatabaseConnectModule","testCommand":"mvn -f JavaTestSkeleton/pom.xml verify -B"},
-      {"name":"JsonUtilModule","repo":"JsonUtilModule","testCommand":"mvn -f JavaTestSkeleton/pom.xml verify -B"}
+      {"name":"JsonUtilModule","repo":"JsonUtilModule","testCommand":"mvn -f JavaTestSkeleton/pom.xml verify -B"},
+      {"name":"ObjectPoolModule","repo":"ObjectPoolModule","testCommand":"mvn -f JavaTestSkeleton/pom.xml verify -B"}
     ]
 
 jobs:
