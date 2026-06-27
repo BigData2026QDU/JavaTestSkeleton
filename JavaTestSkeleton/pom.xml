@@ -24,7 +24,7 @@
         <spotbugs.version>4.8.3.1</spotbugs.version>
         <pmd.version>3.21.2</pmd.version>
 
-        <jacoco.version>0.8.11</jacoco.version>
+        <jacoco.version>0.8.15</jacoco.version>
         <pitest.version>1.19.1</pitest.version>
         <owasp.version>9.0.9</owasp.version>
 
