@@ -1,147 +1,82 @@
-# JavaTestSkeleton — Java 测试项目
+# JavaTestSkeleton
 
-用于测试 Java 项目的通用测试框架。被测项目作为 Git Submodule 加入到 `projects/` 目录。
+Java 后端统一测试框架仓库。所有被测项目以 Git submodule 的形式放在 `projects/` 目录下，但每个项目都按独立目标分别验证，不再把多个被测项目源码混在一次测试里。
 
-## 工作原理
+## 当前被测项目
 
-```
-JavaTestSkeleton/           # 本仓库（测试项目）
-├── JavaTestSkeleton/       # 测试代码和配置
+- `DatabaseConnectModule`
+- `JsonUtilModule`
+- `ObjectPoolModule`
+- `WebMain`
+
+## 仓库结构
+
+```text
+JavaTestSkeleton/
+├── .github/workflows/test.yml   # GitHub Actions 矩阵 CI
+├── AGENTS/                      # 规范子模块
+├── JavaTestSkeleton/            # 测试框架代码
 │   ├── pom.xml
-│   └── src/test/java/      # 测试用例
-├── projects/               # 被测项目（全部为 submodule）
-│   ├── DatabaseConnect/    # 被测项目 A
-│   └── YourProject/        # 被测项目 B
-└── pom.xml                 # 主配置，引入被测项目源码
+│   ├── checkstyle.xml
+│   ├── pmd-ruleset.xml
+│   ├── spotbugs-exclude.xml
+│   ├── owasp-suppressions.xml
+│   └── suites/
+│       ├── databaseconnect/
+│       ├── jsonutil/
+│       └── objectpool/
+├── projects/                    # 全部被测项目 submodule
+│   ├── DatabaseConnect/
+│   ├── JsonUtilModule/
+│   ├── ObjectPoolModule/
+│   └── WebMain/
+├── README.md
+├── Architecture.md
+└── File_Index.md
 ```
 
-**核心机制：** 通过 `build-helper-maven-plugin` 将 `projects/` 中的被测项目源码引入到编译路径，测试用例直接测试这些 submodule 中的代码。
+## 验证策略
 
-## 包含组件
+| 被测项目 | 验证方式 | 说明 |
+|---------|---------|------|
+| `DatabaseConnectModule` | `-Pdatabaseconnect clean verify` | 直接加载该项目源码并运行单元 / 集成测试 |
+| `JsonUtilModule` | `-Pjsonutil clean verify` | 直接加载该项目源码并运行 `JsonUtil` 测试 |
+| `ObjectPoolModule` | `-Pobjectpool clean verify` | 直接加载该项目源码并运行对象池测试 |
+| `WebMain` | 先安装 3 个共享模块 artifact，再执行自身 `clean test` | 保持 `WebMain` 只消费 Maven artifact，不混入其他被测项目源码 |
 
-| 组件 | 版本 | 用途 |
-|------|------|------|
-| JUnit 5 | 5.10.2 | 单元测试 + 参数化测试 |
-| Mockito | 5.11.0 | Mock 对象 |
-| H2 | 2.2.224 | 内存数据库（集成测试） |
-| AssertJ | 3.25.3 | 流式断言 |
-| JaCoCo | 0.8.11 | 代码覆盖率 |
-| PIT | 1.19.1 | 变异测试 |
-| Checkstyle | 10.14.2 | 代码风格检查 |
-| SpotBugs | 4.8.3.1 | Bug 模式检测 |
-| PMD | 3.21.2 | 代码质量分析 |
-| OWASP | 9.0.9 | 依赖漏洞扫描 |
+## 常用命令
 
-## 添加被测项目
-
-### 1. 添加 submodule
+### 1. 独立验证共享模块
 
 ```bash
-git submodule add https://github.com/BigData2026QDU/YourProject.git projects/YourProject
+mvn -f JavaTestSkeleton/pom.xml -Pdatabaseconnect clean verify -B -ntp
+mvn -f JavaTestSkeleton/pom.xml -Pjsonutil clean verify -B -ntp
+mvn -f JavaTestSkeleton/pom.xml -Pobjectpool clean verify -B -ntp
 ```
 
-### 2. 配置 pom.xml
+### 2. 验证 WebMain
 
-在主项目 `pom.xml` 中添加被测项目源码路径：
-
-```xml
-<plugin>
-    <groupId>org.codehaus.mojo</groupId>
-    <artifactId>build-helper-maven-plugin</artifactId>
-    <version>3.5.0</version>
-    <executions>
-        <execution>
-            <id>add-project-sources</id>
-            <phase>generate-sources</phase>
-            <goals><goal>add-source</goal></goals>
-            <configuration>
-                <sources>
-                    <!-- 被测项目源码路径 -->
-                    <source>projects/YourProject/src/main/java</source>
-                </sources>
-            </configuration>
-        </execution>
-    </executions>
-</plugin>
+```bash
+mvn -f projects/DatabaseConnect/pom.xml clean install -DskipTests -B -ntp
+mvn -f projects/JsonUtilModule/JsonUtilModule/pom.xml clean install -DskipTests -B -ntp
+mvn -f projects/ObjectPoolModule/service-pool/pom.xml clean install -DskipTests -B -ntp
+mvn -f projects/WebMain/hivehbase/pom.xml clean test -B -ntp
 ```
 
-### 3. 配置 PIT（可选）
+## CI 行为
 
-如果需要变异测试，还需配置 `pitest-maven` 插件：
+`.github/workflows/test.yml` 使用矩阵逐个项目执行：
 
-```xml
-<plugin>
-    <groupId>org.pitest</groupId>
-    <artifactId>pitest-maven</artifactId>
-    <configuration>
-        <additionalSources>
-            <additionalSource>projects/YourProject/src/main/java</additionalSource>
-        </additionalSources>
-    </configuration>
-</plugin>
-```
+1. 拉取所有 submodule
+2. 固定 `AGENTS` 标准版本
+3. 以 JDK 17 运行项目独立验证
+4. 上传对应项目的测试 / 覆盖率 / 质量报告
+5. 成功时向对应被测仓库创建 `[可发布]` Issue
+6. 失败时在 `JavaTestSkeleton` 仓库记录 `[测试报告]` Issue
 
-## 编写测试
+## 关键约束
 
-测试代码放在 `JavaTestSkeleton/src/test/java/` 目录下。
-
-### 包命名规范（重要）
-
-**本项目统一使用 `org.bigdata` 包名。**
-
-被测项目的 Java 代码必须遵守包命名规范，否则测试工具将无法正常工作：
-
-1. 包名必须与目录结构完全匹配
-2. 包名只使用小写字母
-3. 禁止使用 Java 保留字（`value`、`test`、`class` 等）
-
-```java
-// ✅ 正确：被测项目代码
-projects/DatabaseConnect/src/main/java/org/bigdata/tool/HibernateUtil.java
-→ package org.bigdata.tool;
-
-// ✅ 正确：测试代码（无需 package 声明，或使用默认包）
-JavaTestSkeleton/test/java/HibernateUtilIT.java
-```
-
-### 测试类命名
-
-| 类型 | 命名规则 | 示例 |
-|------|----------|------|
-| 单元测试类 | `XxxTest.java` | `UserServiceTest.java` |
-| 集成测试类 | `XxxIT.java` | `DatabaseIT.java` |
-| 测试方法 | `@DisplayName` 中文描述 | `@DisplayName("用户登录成功")` |
-
-## 命令速查
-
-| 命令 | 说明 |
-|------|------|
-| `mvn test` | 运行单元测试 |
-| `mvn verify` | 运行全部测试 + lint |
-| `mvn verify -DskipTests` | 只运行集成测试 |
-| `mvn pitest:mutationCoverage` | 运行变异测试 |
-| `mvn jacoco:report` | 生成覆盖率报告 |
-| `mvn checkstyle:check` | 代码风格检查 |
-| `mvn pmd:check` | PMD 静态分析 |
-| `mvn spotbugs:check` | SpotBugs bug 检测 |
-| `mvn org.owasp:dependency-check-maven:check` | 依赖漏洞扫描 |
-
-## CI/CD
-
-`.github/workflows/test.yml` 包含 7 个并行任务：
-
-1. 单元测试 + 覆盖率
-2. 集成测试
-3. 变异测试（PIT）
-4. 依赖漏洞扫描（OWASP）
-5. Checkstyle
-6. PMD
-7. SpotBugs
-
-## 标准符合性
-
-- `AGENTS` 作为 submodule 固定到标准提交 `0015b4df10d384830437af2da1505d5d44669fd4`。
-- 被测项目统一放在 `projects/` 目录，并通过 `.gitmodules` 作为 submodule 管理。
-- CI 使用 JDK 17，执行 `mvn -f JavaTestSkeleton/pom.xml verify -B` 和 `mvn -f JavaTestSkeleton/pom.xml pitest:mutationCoverage -B`。
-- 测试通过后，CI 会在被测仓库创建 `[可发布]` issue 触发后续构建发布流程。
-- 测试失败后，CI 会在 JavaTestSkeleton 仓库创建或更新 `[测试报告]` issue，并包含标签、指派、复现步骤、运行链接和验收标准。
+- 被测仓库必须始终保留在 `projects/` 下的独立 submodule 中
+- `WebMain` 不直接编译其他被测项目源码，只依赖本地已安装的 Maven artifact
+- `JsonUtilModule`、`DatabaseConnectModule` 的 artifact 元数据必须完整，否则 `WebMain` 侧验证会失败
+- 本仓库 CI 使用 JDK 17，与课程项目统一环境一致

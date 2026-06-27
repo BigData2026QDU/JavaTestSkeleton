@@ -10,3 +10,6 @@
 [submodule "projects/ObjectPoolModule"]
 	path = projects/ObjectPoolModule
 	url = https://github.com/BigData2026QDU/ObjectPoolModule.git
+[submodule "projects/WebMain"]
+	path = projects/WebMain
+	url = https://github.com/BigData2026QDU/WebMain.git

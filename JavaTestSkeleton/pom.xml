@@ -14,78 +14,26 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- 测试框架版本 -->
         <junit.version>5.10.2</junit.version>
         <mockito.version>5.11.0</mockito.version>
         <h2.version>2.2.224</h2.version>
         <assertj.version>3.27.7</assertj.version>
 
-        <!-- Lint 工具版本 -->
         <checkstyle-plugin.version>3.3.1</checkstyle-plugin.version>
         <checkstyle-engine.version>10.14.2</checkstyle-engine.version>
         <spotbugs.version>4.8.3.1</spotbugs.version>
         <pmd.version>3.21.2</pmd.version>
 
-        <!-- 覆盖率 & 质量工具版本 -->
         <jacoco.version>0.8.11</jacoco.version>
         <pitest.version>1.19.1</pitest.version>
         <owasp.version>9.0.9</owasp.version>
 
-        <!-- 覆盖率阈值（可通过 -D 参数覆盖） -->
         <jacoco.line.minimum>0.70</jacoco.line.minimum>
         <jacoco.branch.minimum>0.60</jacoco.branch.minimum>
+        <test.jvm.args>-Xms128m -Xmx256m -XX:MaxMetaspaceSize=192m</test.jvm.args>
     </properties>
 
     <dependencies>
-        <!-- ========================================
-             被测项目依赖（DatabaseConnect）
-             ======================================== -->
-        <dependency>
-            <groupId>org.hibernate.orm</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>6.4.1.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-            <version>5.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-pool2</artifactId>
-            <version>2.12.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.22.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>2.15.2</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-hibernate6</artifactId>
-            <version>2.15.2</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>8.2.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- ========================================
-             测试依赖
-             ======================================== -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -131,17 +79,7 @@
     </dependencies>
 
     <build>
-        <testSourceDirectory>test/java</testSourceDirectory>
-        <testResources>
-            <testResource>
-                <directory>test/resources</directory>
-            </testResource>
-        </testResources>
-
         <plugins>
-            <!-- ========================================
-                 编译
-                 ======================================== -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -152,53 +90,30 @@
                 </configuration>
             </plugin>
 
-            <!-- ========================================
-                 build-helper：将 submodule 源码加入编译路径
-                 ======================================== -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.5.0</version>
-                <executions>
-                    <execution>
-                        <id>add-project-sources</id>
-                        <phase>generate-sources</phase>
-                        <goals><goal>add-source</goal></goals>
-                        <configuration>
-                            <sources>
-                                <source>../projects/DatabaseConnect/src/main/java</source>
-                                <source>../projects/JsonUtilModule/JsonUtilModule/src/main/java</source>
-                                <source>../projects/ObjectPoolModule/service-pool/src/main/java</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- ========================================
-                 JaCoCo：代码覆盖率
-                 ======================================== -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
                 <executions>
-                    <!-- 准备 agent（在测试前启动） -->
                     <execution>
                         <id>prepare-agent</id>
-                        <goals><goal>prepare-agent</goal></goals>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
                     </execution>
-                    <!-- 生成报告（在验证后生成） -->
                     <execution>
                         <id>report</id>
                         <phase>verify</phase>
-                        <goals><goal>report</goal></goals>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
                     </execution>
-                    <!-- 覆盖率阈值检查 -->
                     <execution>
                         <id>check</id>
                         <phase>verify</phase>
-                        <goals><goal>check</goal></goals>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                         <configuration>
                             <rules>
                                 <rule>
@@ -222,33 +137,30 @@
                 </executions>
             </plugin>
 
-            <!-- ========================================
-                 Surefire：单元测试（并行执行）
-                 ======================================== -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
-                    <!-- 并行执行：按类并行，最多 4 个线程 -->
-                    <parallel>classes</parallel>
-                    <threadCount>4</threadCount>
-                    <!-- 报告 -->
+                    <argLine>@{argLine} ${test.jvm.args}</argLine>
+                    <forkCount>1</forkCount>
+                    <reuseForks>true</reuseForks>
                     <reportFormat>plain</reportFormat>
                     <trimStackTrace>false</trimStackTrace>
                 </configuration>
             </plugin>
 
-            <!-- ========================================
-                 Failsafe：集成测试（并行执行）
-                 ======================================== -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>3.2.5</version>
                 <configuration>
+                    <argLine>@{argLine} ${test.jvm.args}</argLine>
                     <forkCount>1</forkCount>
-                    <reuseForks>false</reuseForks>
+                    <reuseForks>true</reuseForks>
+                    <includes>
+                        <include>**/*IT.java</include>
+                    </includes>
                     <trimStackTrace>false</trimStackTrace>
                 </configuration>
                 <executions>
@@ -261,64 +173,6 @@
                 </executions>
             </plugin>
 
-            <!-- ========================================
-                 PIT：变异测试
-                 ======================================== -->
-            <plugin>
-                <groupId>org.pitest</groupId>
-                <artifactId>pitest-maven</artifactId>
-                <version>${pitest.version}</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.pitest</groupId>
-                        <artifactId>pitest-junit5-plugin</artifactId>
-                        <version>1.2.2</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <additionalSources>
-                        <additionalSource>../projects/DatabaseConnect/src/main/java</additionalSource>
-                        <additionalSource>../projects/JsonUtilModule/JsonUtilModule/src/main/java</additionalSource>
-                        <additionalSource>../projects/ObjectPoolModule/service-pool/src/main/java</additionalSource>
-                    </additionalSources>
-                    <targetTests>*Test</targetTests>
-                    <mutators>DEFAULTS</mutators>
-                    <timestampedReports>false</timestampedReports>
-                    <outputDirectory>target/pit-reports</outputDirectory>
-                    <failWhenNoMutations>false</failWhenNoMutations>
-                </configuration>
-                <!-- 不绑定阶段，由 CI 单独调用 -->
-            </plugin>
-
-            <!-- ========================================
-                 OWASP：依赖漏洞扫描
-                 ======================================== -->
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>${owasp.version}</version>
-                <configuration>
-                    <failBuildOnCVSS>7</failBuildOnCVSS>
-                    <failOnError>false</failOnError>
-                    <autoUpdate>false</autoUpdate>
-                    <suppressionFiles>owasp-suppressions.xml</suppressionFiles>
-                    <format>HTML</format>
-                    <outputDirectory>target/dependency-check</outputDirectory>
-                    <!-- 跳过 NVD 更新（CI 环境无 API Key 时使用本地缓存） -->
-                    <nvdApiDelay>0</nvdApiDelay>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>owasp-check</id>
-                        <phase>verify</phase>
-                        <goals><goal>check</goal></goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- ========================================
-                 Lint：Checkstyle
-                 ======================================== -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -335,20 +189,18 @@
                     <consoleOutput>true</consoleOutput>
                     <failOnViolation>true</failOnViolation>
                     <violationSeverity>warning</violationSeverity>
-                    <includeTestSourceRoots>false</includeTestSourceRoots>
                 </configuration>
                 <executions>
                     <execution>
                         <id>checkstyle</id>
                         <phase>validate</phase>
-                        <goals><goal>check</goal></goals>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- ========================================
-                 Lint：SpotBugs
-                 ======================================== -->
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
@@ -357,6 +209,8 @@
                     <effort>Max</effort>
                     <threshold>Medium</threshold>
                     <xmlOutput>true</xmlOutput>
+                    <maxHeap>256</maxHeap>
+                    <jvmArgs>-Xms128m -Xmx256m -XX:MaxMetaspaceSize=192m -XX:ActiveProcessorCount=1 -XX:+UseSerialGC -Xshare:off</jvmArgs>
                     <failOnError>true</failOnError>
                     <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
                 </configuration>
@@ -364,14 +218,13 @@
                     <execution>
                         <id>spotbugs</id>
                         <phase>verify</phase>
-                        <goals><goal>check</goal></goals>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- ========================================
-                 Lint：PMD
-                 ======================================== -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
@@ -388,10 +241,261 @@
                     <execution>
                         <id>pmd</id>
                         <phase>verify</phase>
-                        <goals><goal>check</goal></goals>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>${owasp.version}</version>
+                <configuration>
+                    <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <failOnError>false</failOnError>
+                    <autoUpdate>false</autoUpdate>
+                    <suppressionFiles>owasp-suppressions.xml</suppressionFiles>
+                    <format>HTML</format>
+                    <outputDirectory>target/dependency-check</outputDirectory>
+                    <nvdApiDelay>0</nvdApiDelay>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>owasp-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>databaseconnect</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                    <version>6.4.1.Final</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.zaxxer</groupId>
+                    <artifactId>HikariCP</artifactId>
+                    <version>7.1.0</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-pool2</artifactId>
+                    <version>2.13.1</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.mysql</groupId>
+                    <artifactId>mysql-connector-j</artifactId>
+                    <version>8.2.0</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.5.0</version>
+                        <executions>
+                            <execution>
+                                <id>add-databaseconnect-source</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>../projects/DatabaseConnect/src/main/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>add-databaseconnect-tests</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>suites/databaseconnect/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>add-databaseconnect-test-resources</id>
+                                <phase>generate-test-resources</phase>
+                                <goals>
+                                    <goal>add-test-resource</goal>
+                                </goals>
+                                <configuration>
+                                    <resources>
+                                        <resource>
+                                            <directory>suites/databaseconnect/resources</directory>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <version>${pitest.version}</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.pitest</groupId>
+                                <artifactId>pitest-junit5-plugin</artifactId>
+                                <version>1.2.2</version>
+                            </dependency>
+                        </dependencies>
+                        <configuration>
+                            <additionalClasspathElements>
+                                <additionalClasspathElement>../projects/DatabaseConnect/src/main/java</additionalClasspathElement>
+                            </additionalClasspathElements>
+                            <targetClasses>
+                                <param>org.bigdata.tool.*</param>
+                                <param>org.bigdata.service.*</param>
+                            </targetClasses>
+                            <targetTests>
+                                <param>*Test</param>
+                                <param>*IT</param>
+                            </targetTests>
+                            <timestampedReports>false</timestampedReports>
+                            <outputDirectory>target/pit-reports</outputDirectory>
+                            <failWhenNoMutations>false</failWhenNoMutations>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>jsonutil</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                    <version>2.15.2</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.datatype</groupId>
+                    <artifactId>jackson-datatype-jsr310</artifactId>
+                    <version>2.15.2</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.datatype</groupId>
+                    <artifactId>jackson-datatype-hibernate6</artifactId>
+                    <version>2.15.2</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.hibernate.orm</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                    <version>6.2.6.Final</version>
+                </dependency>
+                <dependency>
+                    <groupId>jakarta.persistence</groupId>
+                    <artifactId>jakarta.persistence-api</artifactId>
+                    <version>3.1.0</version>
+                </dependency>
+                <dependency>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>javax.servlet-api</artifactId>
+                    <version>4.0.1</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.5.0</version>
+                        <executions>
+                            <execution>
+                                <id>add-jsonutil-source</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>../projects/JsonUtilModule/JsonUtilModule/src/main/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>add-jsonutil-tests</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>suites/jsonutil/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>objectpool</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-pool2</artifactId>
+                    <version>2.12.0</version>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.5.0</version>
+                        <executions>
+                            <execution>
+                                <id>add-objectpool-source</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>add-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>../projects/ObjectPoolModule/service-pool/src/main/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>add-objectpool-tests</id>
+                                <phase>generate-test-sources</phase>
+                                <goals>
+                                    <goal>add-test-source</goal>
+                                </goals>
+                                <configuration>
+                                    <sources>
+                                        <source>suites/objectpool/java</source>
+                                    </sources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

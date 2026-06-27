@@ -2,9 +2,13 @@ name: JavaTestSkeleton CI
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
   pull_request:
-    branches: [main, master]
+    branches:
+      - main
+      - master
   schedule:
     - cron: '0 18 * * *'
   workflow_dispatch:
@@ -13,26 +17,65 @@ permissions:
   contents: read
   issues: write
 
-env:
-  TESTED_PROJECTS: >-
-    [
-      {"name":"DatabaseConnect","repo":"DatabaseConnectModule","testCommand":"mvn -f JavaTestSkeleton/pom.xml verify -B"},
-      {"name":"JsonUtilModule","repo":"JsonUtilModule","testCommand":"mvn -f JavaTestSkeleton/pom.xml verify -B"},
-      {"name":"ObjectPoolModule","repo":"ObjectPoolModule","testCommand":"mvn -f JavaTestSkeleton/pom.xml verify -B"}
-    ]
-
 jobs:
-  test-and-quality:
-    name: Test and quality checks
+  test-project:
+    name: ${{ matrix.project.display_name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - key: databaseconnect
+            display_name: DatabaseConnect
+            tested_repo: DatabaseConnectModule
+            project_path: projects/DatabaseConnect
+            prepare_command: ""
+            test_command: mvn -f JavaTestSkeleton/pom.xml -Pdatabaseconnect clean verify -B -ntp
+            artifact_paths: |
+              JavaTestSkeleton/target/surefire-reports/
+              JavaTestSkeleton/target/failsafe-reports/
+              JavaTestSkeleton/target/site/jacoco/
+              JavaTestSkeleton/target/dependency-check/
+          - key: jsonutil
+            display_name: JsonUtilModule
+            tested_repo: JsonUtilModule
+            project_path: projects/JsonUtilModule
+            prepare_command: ""
+            test_command: mvn -f JavaTestSkeleton/pom.xml -Pjsonutil clean verify -B -ntp
+            artifact_paths: |
+              JavaTestSkeleton/target/surefire-reports/
+              JavaTestSkeleton/target/site/jacoco/
+              JavaTestSkeleton/target/dependency-check/
+          - key: objectpool
+            display_name: ObjectPoolModule
+            tested_repo: ObjectPoolModule
+            project_path: projects/ObjectPoolModule
+            prepare_command: ""
+            test_command: mvn -f JavaTestSkeleton/pom.xml -Pobjectpool clean verify -B -ntp
+            artifact_paths: |
+              JavaTestSkeleton/target/surefire-reports/
+              JavaTestSkeleton/target/site/jacoco/
+              JavaTestSkeleton/target/dependency-check/
+          - key: webmain
+            display_name: WebMain
+            tested_repo: WebMain
+            project_path: projects/WebMain
+            prepare_command: |
+              mvn -f projects/DatabaseConnect/pom.xml clean install -DskipTests -B -ntp
+              mvn -f projects/JsonUtilModule/JsonUtilModule/pom.xml clean install -DskipTests -B -ntp
+              mvn -f projects/ObjectPoolModule/service-pool/pom.xml clean install -DskipTests -B -ntp
+            test_command: mvn -f projects/WebMain/hivehbase/pom.xml clean test -B -ntp
+            artifact_paths: |
+              projects/WebMain/hivehbase/target/surefire-reports/
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.PAT_TOKEN || github.token }}
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN != '' && secrets.PAT_TOKEN || github.token }}
 
       - name: Confirm AGENTS standard revision
         run: |
@@ -47,300 +90,174 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Run Maven verification
-        run: mvn -f JavaTestSkeleton/pom.xml verify -B
+      - name: Resolve tested project commit
+        id: tested_commit
+        run: echo "sha=$(git -C '${{ matrix.project.project_path }}' rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Run mutation testing
-        run: mvn -f JavaTestSkeleton/pom.xml pitest:mutationCoverage -B
+      - name: Prepare peer artifacts
+        if: ${{ matrix.project.prepare_command != '' }}
+        run: ${{ matrix.project.prepare_command }}
 
-      - name: Upload test reports
+      - name: Run verification
+        run: ${{ matrix.project.test_command }}
+
+      - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports
-          path: |
-            JavaTestSkeleton/target/surefire-reports/
-            JavaTestSkeleton/target/failsafe-reports/
-            JavaTestSkeleton/target/site/jacoco/
-            JavaTestSkeleton/target/pit-reports/
-            JavaTestSkeleton/target/dependency-check/
+          name: ${{ matrix.project.key }}-reports
+          path: ${{ matrix.project.artifact_paths }}
           if-no-files-found: ignore
           retention-days: 7
 
-  notify-success:
-    name: Notify tested projects on success
-    runs-on: ubuntu-latest
-    needs: test-and-quality
-    if: ${{ needs.test-and-quality.result == 'success' && github.event_name != 'pull_request' }}
-    env:
-      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+      - name: Warn when PAT token is missing
+        if: ${{ success() && github.event_name != 'pull_request' && secrets.PAT_TOKEN == '' }}
+        run: echo "::warning::PAT_TOKEN 未配置，跳过向 ${{ matrix.project.tested_repo }} 创建 [可发布] issue。"
 
-    steps:
-      - name: Require PAT_TOKEN
-        if: ${{ env.PAT_TOKEN == '' }}
-        run: |
-          echo "PAT_TOKEN is required to create release issues in tested repositories." >&2
-          exit 1
-
-      - name: Create release issues
+      - name: Create release trigger issue
+        if: ${{ success() && github.event_name != 'pull_request' && secrets.PAT_TOKEN != '' }}
         uses: actions/github-script@v7
+        env:
+          TARGET_REPO: ${{ matrix.project.tested_repo }}
+          DISPLAY_NAME: ${{ matrix.project.display_name }}
+          TEST_COMMAND: ${{ matrix.project.test_command }}
+          TESTED_SHA: ${{ steps.tested_commit.outputs.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         with:
-          github-token: ${{ env.PAT_TOKEN }}
+          github-token: ${{ secrets.PAT_TOKEN }}
           script: |
             const owner = 'BigData2026QDU';
-            const projects = JSON.parse(process.env.TESTED_PROJECTS);
-            const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const testedSha = process.env.TESTED_SHA;
+            const shortSha = testedSha.substring(0, 7);
+            const repo = process.env.TARGET_REPO;
+            const labels = [
+              { name: 'release', color: '0e8a16', description: 'Release trigger' },
+              { name: 'ci', color: '1d76db', description: 'Created by CI' },
+              { name: 'auto-generated', color: 'ededed', description: 'Created automatically' }
+            ];
+            const title = `[可发布] ${process.env.DISPLAY_NAME} - JavaTestSkeleton 验证通过 - ${shortSha}`;
+            const body = [
+              '## 测试报告',
+              '',
+              `- 被测项目：${process.env.DISPLAY_NAME}`,
+              `- 被测仓库：https://github.com/${owner}/${repo}`,
+              `- 被测提交：${testedSha}`,
+              `- 测试框架：${context.repo.owner}/${context.repo.repo}`,
+              `- 测试框架提交：${context.sha}`,
+              `- 验证命令：\`${process.env.TEST_COMMAND}\``,
+              `- 工作流运行：${process.env.RUN_URL}`,
+              '',
+              '本次验证已按独立项目执行；WebMain 依赖的共享模块已先构建并安装为 Maven artifact。'
+            ].join('\n');
 
-            async function ensureLabels(repo, labels) {
-              for (const label of labels) {
-                try {
-                  await github.rest.issues.getLabel({ owner, repo, name: label.name });
-                } catch (error) {
-                  if (error.status !== 404) throw error;
-                  await github.rest.issues.createLabel({
-                    owner,
-                    repo,
-                    name: label.name,
-                    color: label.color,
-                    description: label.description
-                  });
+            for (const label of labels) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name: label.name });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
                 }
-              }
-            }
-
-            for (const project of projects) {
-              await ensureLabels(project.repo, [
-                { name: 'release', color: '0e8a16', description: 'Release trigger' },
-                { name: 'ci', color: '1d76db', description: 'Created by CI' },
-                { name: 'auto-generated', color: 'ededed', description: 'Created automatically' }
-              ]);
-
-              const commits = await github.rest.repos.listCommits({
-                owner,
-                repo: project.repo,
-                per_page: 1
-              });
-              const latestCommit = commits.data[0];
-              const testedSha = latestCommit?.sha || 'N/A';
-              const testedAuthor = latestCommit?.author?.login || latestCommit?.commit?.author?.name || 'N/A';
-              const testedDate = latestCommit?.commit?.author?.date || 'N/A';
-              const testedMessage = latestCommit?.commit?.message || 'N/A';
-              const title = `[可发布] ${project.name} - JavaTestSkeleton 测试通过 - ${testedSha.substring(0, 7)}`;
-              const body = `## 测试报告
-
-            **被测项目：** ${project.name}
-            **被测仓库：** https://github.com/${owner}/${project.repo}
-            **测试框架：** ${context.repo.owner}/${context.repo.repo}
-            **测试时间：** ${new Date().toISOString()}
-            **测试框架提交：** ${context.sha}
-            **被测提交 SHA：** ${testedSha}
-            **被测提交作者：** ${testedAuthor}
-            **被测提交时间：** ${testedDate}
-            **被测提交信息：** ${testedMessage}
-            **测试结果：** 通过
-
-            ## 验证命令
-
-            - \`mvn -f JavaTestSkeleton/pom.xml verify -B\`
-            - \`mvn -f JavaTestSkeleton/pom.xml pitest:mutationCoverage -B\`
-
-            ## 验证内容
-
-            - JUnit / Failsafe 测试
-            - JaCoCo 覆盖率检查
-            - Checkstyle / PMD / SpotBugs
-            - OWASP Dependency Check
-            - PIT Mutation Testing
-
-            ## 相关链接
-
-            - 测试运行：${runUrl}
-            - 被测提交：https://github.com/${owner}/${project.repo}/commit/${testedSha}
-
-            此 Issue 用于触发被测仓库后续构建和发布流程。
-
-            ---
-            由 JavaTestSkeleton CI 自动创建`;
-
-              const existing = await github.rest.issues.listForRepo({
-                owner,
-                repo: project.repo,
-                state: 'open',
-                labels: 'release,ci,auto-generated',
-                per_page: 100
-              });
-              const duplicate = existing.data.find(issue =>
-                issue.title.includes(project.name) && issue.body?.includes(`**被测提交 SHA：** ${testedSha}`)
-              );
-
-              if (duplicate) {
-                await github.rest.issues.createComment({
+                await github.rest.issues.createLabel({
                   owner,
-                  repo: project.repo,
-                  issue_number: duplicate.number,
-                  body
-                });
-              } else {
-                await github.rest.issues.create({
-                  owner,
-                  repo: project.repo,
-                  title,
-                  body,
-                  labels: ['release', 'ci', 'auto-generated']
+                  repo,
+                  name: label.name,
+                  color: label.color,
+                  description: label.description
                 });
               }
             }
 
-  notify-failure:
-    name: Report test failure
-    runs-on: ubuntu-latest
-    needs: test-and-quality
-    if: ${{ needs.test-and-quality.result == 'failure' && github.event_name != 'pull_request' }}
+            const existing = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100
+            });
 
-    steps:
-      - name: Create or update failure issues
+            const duplicate = existing.data.find(issue =>
+              issue.title.includes(process.env.DISPLAY_NAME) &&
+              issue.body?.includes(`- 被测提交：${testedSha}`)
+            );
+
+            if (duplicate) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: duplicate.number,
+                body
+              });
+            } else {
+              await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body,
+                labels: labels.map(label => label.name)
+              });
+            }
+
+      - name: Create or update failure issue
+        if: ${{ failure() && github.event_name != 'pull_request' }}
         uses: actions/github-script@v7
+        env:
+          DISPLAY_NAME: ${{ matrix.project.display_name }}
+          TEST_COMMAND: ${{ matrix.project.test_command }}
+          TESTED_SHA: ${{ steps.tested_commit.outputs.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         with:
           github-token: ${{ github.token }}
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const upstreamOwner = 'BigData2026QDU';
-            const projects = JSON.parse(process.env.TESTED_PROJECTS);
-            const runUrl = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+            const title = `[测试报告] ${process.env.DISPLAY_NAME} 验证失败`;
+            const body = [
+              '## 验证失败',
+              '',
+              `- 被测项目：${process.env.DISPLAY_NAME}`,
+              `- 被测提交：${process.env.TESTED_SHA}`,
+              `- 验证命令：\`${process.env.TEST_COMMAND}\``,
+              `- 工作流运行：${process.env.RUN_URL}`,
+              '',
+              '请根据日志修复后重新触发本项目的 CI。'
+            ].join('\n');
 
-            async function ensureLabels(labels) {
-              for (const label of labels) {
-                try {
-                  await github.rest.issues.getLabel({ owner, repo, name: label.name });
-                } catch (error) {
-                  if (error.status !== 404) throw error;
-                  await github.rest.issues.createLabel({
-                    owner,
-                    repo,
-                    name: label.name,
-                    color: label.color,
-                    description: label.description
-                  });
-                }
+            const labels = [
+              { name: 'test-failure', color: 'b60205', description: 'Automated project verification failed' },
+              { name: 'auto-generated', color: 'ededed', description: 'Created automatically by CI' }
+            ];
+
+            for (const label of labels) {
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name: label.name });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.issues.createLabel({ owner, repo, ...label });
               }
             }
 
-            await ensureLabels([
-              { name: 'test-report', color: 'd73a4a', description: 'Automated test report' },
-              { name: 'auto-generated', color: 'ededed', description: 'Created automatically' },
-              { name: 'needs-investigation', color: 'fbca04', description: 'Needs investigation' },
-              { name: 'test-failure', color: 'b60205', description: 'Test failure' },
-              { name: 'priority: high', color: 'ff8c00', description: 'High priority' }
-            ]);
-
-            let milestone;
-            const milestones = await github.rest.issues.listMilestones({
+            const issues = await github.rest.issues.listForRepo({
               owner,
               repo,
               state: 'open',
-              sort: 'due_on',
-              direction: 'asc',
-              per_page: 1
+              labels: 'test-failure,auto-generated',
+              per_page: 100
             });
-            if (milestones.data.length > 0) {
-              milestone = milestones.data[0].number;
-            }
 
-            for (const project of projects) {
-              const commits = await github.rest.repos.listCommits({
-                owner: upstreamOwner,
-                repo: project.repo,
-                per_page: 1
-              });
-              const latestCommit = commits.data[0];
-              const commitAuthor = latestCommit?.author?.login;
-              const rawAuthor = latestCommit?.commit?.author?.name || 'N/A';
-              const commitSha = latestCommit?.sha || 'N/A';
-              const commitDate = latestCommit?.commit?.author?.date || 'N/A';
-              const commitMessage = latestCommit?.commit?.message || 'N/A';
-              const assignees = [...new Set([commitAuthor, 'LuckyAnJun'].filter(Boolean))];
-              const title = `[测试报告] ${project.name} - test-failure - JavaTestSkeleton CI 未通过`;
-              const body = `## 问题概述
+            const existing = issues.data.find(issue => issue.title === title);
 
-            **被测项目：** ${project.name}
-            **被测仓库：** https://github.com/${upstreamOwner}/${project.repo}
-            **问题类型：** test-failure
-            **严重程度：** priority: high
-            **发现时间：** ${new Date().toISOString()}
-            **测试框架：** ${owner}/${repo}
-            **测试运行 ID：** ${context.runId}
-
-            ## 被测项目提交信息
-
-            - **提交 SHA：** ${commitSha}
-            - **提交作者：** ${commitAuthor || 'N/A'}
-            - **原始作者信息：** ${rawAuthor}
-            - **提交时间：** ${commitDate}
-            - **提交信息：** ${commitMessage}
-            - **分支：** main/master
-
-            ## 失败上下文
-
-            - **失败命令：** \`${project.testCommand}\` 或 \`mvn -f JavaTestSkeleton/pom.xml pitest:mutationCoverage -B\`
-            - **失败摘要：** JavaTestSkeleton CI 未通过，详见 Actions 日志。
-            - **关键错误日志：** ${runUrl}
-            - **覆盖率数据：** N/A，失败详情以本次 Actions artifact 为准。
-            - **性能数据：** N/A，本次标准测试未采集性能指标。
-            - **安全扫描数据：** N/A，如 OWASP 阶段执行成功请查看 artifact。
-
-            ## 复现步骤
-
-            1. 克隆测试框架：\`git clone https://github.com/${owner}/${repo}.git\`
-            2. 初始化子模块：\`git submodule update --init --recursive\`
-            3. 确认 AGENTS 提交：\`cd AGENTS && git checkout 0015b4df10d384830437af2da1505d5d44669fd4\`
-            4. 使用 JDK 17 运行：\`${project.testCommand}\`
-            5. 查看失败日志：${runUrl}
-
-            ## 验收标准
-
-            - 所有测试通过
-            - 覆盖率达标
-            - 代码规范检查通过
-            - 安全扫描无高危漏洞
-            - 重新运行 CI 后确认问题已修复
-
-            ## 相关资源
-
-            - 测试运行：${runUrl}
-            - 被测仓库：https://github.com/${upstreamOwner}/${project.repo}
-            - 问题提交：https://github.com/${upstreamOwner}/${project.repo}/commit/${commitSha}
-
-            ---
-            此 Issue 由 JavaTestSkeleton CI 自动创建。`;
-
-              const existing = await github.rest.issues.listForRepo({
+            if (existing) {
+              await github.rest.issues.createComment({
                 owner,
                 repo,
-                state: 'open',
-                labels: 'test-report,test-failure',
-                per_page: 100
+                issue_number: existing.number,
+                body
               });
-              const duplicate = existing.data.find(issue =>
-                issue.title === title && issue.body?.includes(`**提交 SHA：** ${commitSha}`)
-              );
-
-              if (duplicate) {
-                await github.rest.issues.createComment({
-                  owner,
-                  repo,
-                  issue_number: duplicate.number,
-                  body
-                });
-              } else {
-                await github.rest.issues.create({
-                  owner,
-                  repo,
-                  title,
-                  body,
-                  assignees,
-                  labels: ['test-report', 'auto-generated', 'needs-investigation', 'test-failure', 'priority: high'],
-                  milestone
-                });
-              }
+            } else {
+              await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body,
+                labels: ['test-failure', 'auto-generated']
+              });
             }
