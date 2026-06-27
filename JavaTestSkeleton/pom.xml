@@ -26,7 +26,7 @@
 
         <jacoco.version>0.8.11</jacoco.version>
         <pitest.version>1.19.1</pitest.version>
-        <owasp.version>9.0.9</owasp.version>
+        <owasp.version>12.2.2</owasp.version>
 
         <jacoco.line.minimum>0.70</jacoco.line.minimum>
         <jacoco.branch.minimum>0.60</jacoco.branch.minimum>
